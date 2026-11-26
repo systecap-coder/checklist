@@ -9,6 +9,37 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- MODAL DE CÁMARA EN VIVO DEL DISPOSITIVO (ESCRITORIO / TABLET) -->
+  <div id="cameraCaptureModal" class="no-print fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden text-white">
+      <div class="flex items-center justify-between px-4 py-3 bg-navy-900 border-b border-slate-800">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">Cámara del Dispositivo</span>
+          <h3 id="cameraModalSectionTitle" class="text-sm font-bold text-white truncate max-w-xs sm:max-w-sm">Evidencia Fotográfica</h3>
+        </div>
+        <button type="button" onclick="closeLiveCameraModal()" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300">
+          ✕ Cerrar
+        </button>
+      </div>
+      <div class="relative bg-black aspect-[4/3] w-full flex items-center justify-center overflow-hidden">
+        <video id="cameraLiveVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-slate-900 border-t border-slate-800">
+        <button type="button" onclick="switchLiveCameraFacing()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          🔄 Cambiar Cámara
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeLiveCameraModal()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+            Cancelar
+          </button>
+          <button type="button" onclick="captureLiveCameraPhoto()" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-amber-400 hover:bg-amber-300 text-navy-900 shadow transition">
+            📸 Capturar Foto
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     tailwind.config = {
       theme: {
@@ -60,6 +91,26 @@
     .st-corr { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
     .st-na { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
 
+    /* Contenedor estático de evidencia fotográfica */
+    .photo-evidence-frame {
+      width: 260px;
+      height: 170px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .photo-evidence-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
     /* =====================================================================
        ESTILOS PROFESIONALES DE IMPRESIÓN / EXPORTACIÓN PDF (FORMATO FRC001)
        ===================================================================== */
@@ -86,6 +137,44 @@
 
       .no-print {
         display: none !important;
+      }
+
+      /* Ocultar contenedores de foto vacíos al imprimir para no dejar espacios en blanco */
+      .photo-evidence-box[data-has-photo="false"] {
+        display: none !important;
+      }
+
+      /* Estilo estático y profesional de la evidencia fotográfica impresa */
+      .photo-evidence-box[data-has-photo="true"] {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 12px !important;
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        border-left: 4px solid #0B1B32 !important;
+        border-radius: 6px !important;
+        padding: 6px 10px !important;
+        margin: 6px 8px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .photo-evidence-box[data-has-photo="true"] .photo-evidence-frame {
+        width: 220px !important;
+        height: 145px !important;
+        background: #ffffff !important;
+        border: 1px solid #94a3b8 !important;
+        border-radius: 4px !important;
+        flex-shrink: 0 !important;
+      }
+
+      .photo-evidence-box[data-has-photo="true"] .photo-caption-input {
+        border: none !important;
+        border-bottom: 1px solid #cbd5e1 !important;
+        font-size: 7.5pt !important;
+        font-weight: 600 !important;
+        color: #0f172a !important;
       }
 
       /* Encabezado estático (evita que flote o tape tablas en saltos de página) */
@@ -120,8 +209,6 @@
         overflow: visible !important;
       }
 
-      /* Nunca aplicar page-break-inside: avoid al bloque completo de 40-60 puntos;
-         solo a tarjetas compactas (ficha, KPIs, refacciones, firmas) */
       .print-keep-together {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
@@ -148,7 +235,6 @@
         page-break-after: avoid !important;
       }
 
-      /* Eliminar barras de desplazamiento horizontal y ajustar todas las columnas */
       .overflow-x-auto {
         overflow: visible !important;
         width: 100% !important;
@@ -181,7 +267,7 @@
         font-size: 12pt !important;
       }
 
-      /* Inputs, selects y textareas limpios (sin flechas ni placeholders basura) */
+      /* Inputs, selects y textareas limpios */
       input, select, textarea {
         border: none !important;
         border-bottom: 1px solid #94a3b8 !important;
@@ -205,7 +291,6 @@
         opacity: 0 !important;
       }
 
-      /* Ocultar dd/mm/aaaa en inputs de fecha vacíos al imprimir */
       input[type="date"].print-date-empty {
         color: transparent !important;
       }
@@ -335,6 +420,10 @@
         height: 14px !important;
         font-size: 7px !important;
       }
+      .photo-evidence-box[data-has-photo="true"] .photo-evidence-frame {
+        width: 170px !important;
+        height: 115px !important;
+      }
     }
   </style>
 </head>
@@ -347,43 +436,36 @@
       <div class="flex items-center gap-3">
         <svg class="w-11 h-11 shrink-0" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="2" y="2" width="60" height="60" rx="12" fill="#13294B" stroke="#EAB308" stroke-width="2.5"/>
-          <path d="M10 18H54V24H10V18Z" fill="#EAB308"/>
-          <rect x="24" y="15" width="16" height="11" rx="2" fill="#F8FAFC"/>
-          <line x1="29" y1="26" x2="29" y2="38" stroke="#EAB308" stroke-width="2.2"/>
-          <line x1="35" y1="26" x2="35" y2="38" stroke="#EAB308" stroke-width="2.2"/>
-          <rect x="26" y="37" width="12" height="6" rx="1.5" fill="#F8FAFC"/>
-          <path d="M32 43V46C35.5 46 37.5 48.5 37.5 51.2C37.5 54.2 35 56.5 32 56.5C29.2 56.5 27.2 54.7 26.8 52.3" stroke="#EAB308" stroke-width="3" stroke-linecap="round"/>
+          <path d="M12 18H52M18 18V46M46 18V46M26 18V30C26 33.3137 28.6863 36 32 36C35.3137 36 38 33.3137 38 30V26" stroke="#FACC15" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="M32 36V42C32 45.3137 29.3137 48 26 48C23.5 48 22 46.2 22 44" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
         </svg>
         <div>
-          <div class="flex items-center gap-2.5 flex-wrap">
-            <span class="font-display text-2xl font-extrabold tracking-wider">SANT <span class="text-amber-500">CRANES</span></span>
-            <span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-bold px-2.5 py-0.5 rounded uppercase">
-              Formato FRC001 • Mantenimiento Preventivo
-            </span>
+          <div class="flex items-center gap-2">
+            <span class="font-display text-2xl sm:text-3xl font-extrabold tracking-wide text-white">SANT CRANES</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider bg-amber-500 text-navy-950 px-2 py-0.5 rounded">FRC001 REV.0</span>
           </div>
-          <p class="text-xs text-slate-300">Guadalupe, N.L. • WhatsApp: +52 81 1229 7333</p>
+          <p class="text-xs text-slate-300">Check List Digital de Mantenimiento Preventivo y Reporte de Campo</p>
         </div>
       </div>
 
-      <!-- BOTONES DE ACCIÓN -->
       <div class="no-print flex flex-wrap items-center gap-2">
-        <button type="button" onclick="loadSampleData()" class="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-lg border border-white/15 transition">
+        <button type="button" onclick="loadSampleData()" class="px-3 py-2 rounded-lg text-xs font-semibold bg-navy-800 hover:bg-navy-700 border border-slate-600 text-slate-200 transition">
           Cargar Ejemplo
         </button>
-        <button type="button" onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
+        <button type="button" onclick="exportCSV()" class="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-700 hover:bg-emerald-600 text-white transition">
           Excel (CSV)
         </button>
-        <button type="button" onclick="exportJSON()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
+        <button type="button" onclick="exportJSON()" class="px-3 py-2 rounded-lg text-xs font-semibold bg-sky-700 hover:bg-sky-600 text-white transition">
           Respaldo JSON
         </button>
-        <button type="button" onclick="printChecklist()" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
+        <button type="button" onclick="printChecklist()" class="px-3.5 py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-navy-950 transition">
           Imprimir / PDF
         </button>
-        <button type="button" onclick="clearAllData()" class="bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
-          Limpiar
-        </button>
-        <button type="button" id="sendCloudBtn" onclick="submitChecklistToCloud()" class="bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-extrabold px-4 py-2 rounded-lg shadow transition">
+        <button type="button" id="sendCloudBtn" onclick="submitChecklistToCloud()" class="px-4 py-2 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 text-navy-900 shadow transition">
           Guardar en Drive / Sheets
+        </button>
+        <button type="button" onclick="clearAllData()" class="px-2.5 py-2 rounded-lg text-xs font-semibold bg-rose-900/70 hover:bg-rose-800 text-rose-100 transition" title="Limpiar formulario">
+          Limpiar
         </button>
       </div>
     </div>
@@ -391,127 +473,125 @@
 
   <main class="max-w-[1440px] mx-auto px-4 sm:px-6 pt-6 space-y-6">
 
-    <!-- ALERTA DE ESTADO DE ENVÍO -->
-    <div id="cloudStatus" class="hidden rounded-xl p-4 text-sm font-medium shadow-sm"></div>
+    <!-- BANNER DE ESTADO NUBE -->
+    <div id="cloudStatus" class="hidden rounded-xl p-4 text-sm font-medium"></div>
 
-    <!-- 1. FICHA TÉCNICA DEL EQUIPO -->
+    <!-- 0. FICHA TÉCNICA DEL EQUIPO Y ORDEN DE SERVICIO -->
     <section class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm print-keep-together">
-      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
-        <h1 class="font-display text-xl sm:text-2xl font-extrabold text-navy-900 uppercase">
-          Ficha Técnica del Equipo y Orden de Servicio
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-200">
+        <h1 class="font-display text-xl sm:text-2xl font-extrabold uppercase tracking-wide text-navy-900">
+          FICHA TÉCNICA DEL EQUIPO Y ORDEN DE SERVICIO
         </h1>
-        <span id="autosaveBadge" class="no-print text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full font-medium">
-          Autoguardado local activo
-        </span>
+        <span class="no-print text-xs text-slate-500">Guardado automático local activo</span>
       </div>
 
       <div class="meta-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3.5 text-xs">
         <div class="meta-span-2 lg:col-span-2">
-          <label class="block font-bold text-slate-600 uppercase mb-1">Cliente / Planta *</label>
-          <input type="text" data-meta="cliente" placeholder="Ej. Metalsa / ArcelorMittal" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Cliente / Planta *</label>
+          <input type="text" data-meta="cliente" placeholder="Ej. Ternium / Metalsa" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div class="meta-span-2 lg:col-span-2">
-          <label class="block font-bold text-slate-600 uppercase mb-1">Proyecto</label>
-          <input type="text" data-meta="proyecto" placeholder="Ej. Mantenimiento Preventivo Anual" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Proyecto / Servicio</label>
+          <input type="text" data-meta="proyecto" placeholder="Mantenimiento Preventivo Anual" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">No. de Pedido</label>
-          <input type="text" data-meta="pedido" placeholder="OC-0000" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">No. de Pedido / OT</label>
+          <input type="text" data-meta="pedido" placeholder="OC-0000" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">Periodo</label>
-          <input type="text" data-meta="periodo" value="2026 - 2027" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Periodo</label>
+          <input type="text" data-meta="periodo" placeholder="2026 - 2027" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
 
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">Grúa No. de Serie *</label>
-          <input type="text" data-meta="serie" placeholder="S/N" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Grúa No. de Serie *</label>
+          <input type="text" data-meta="serie" placeholder="S/N Equipo" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">No. de Máquina</label>
-          <input type="text" data-meta="maquina" placeholder="GV-01" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">No. de Máquina</label>
+          <input type="text" data-meta="maquina" placeholder="GRÚA-01" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">Área / Nave</label>
-          <input type="text" data-meta="area" placeholder="Nave Principal / Fundición" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Área / Nave</label>
+          <input type="text" data-meta="area" placeholder="Nave Principal" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">Capacidad (Ton)</label>
-          <input type="text" data-meta="capacidad" placeholder="20 / 7.5 Ton" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Capacidad</label>
+          <input type="text" data-meta="capacidad" placeholder="Ej. 10 / 5 Ton" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">Tipo de Equipo</label>
-          <select data-meta="tipo" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:border-navy-900 focus:outline-none">
-            <option value="Grúa Viajera Birriel">Grúa Viajera Birriel</option>
-            <option value="Grúa Viajera Monorriel">Grúa Viajera Monorriel</option>
-            <option value="Polipasto Estacionario / Monorriel">Polipasto Estacionario / Monorriel</option>
-            <option value="Grúa Semi-Pórtico / Pórtico">Grúa Semi-Pórtico / Pórtico</option>
-            <option value="Grúa Bandera">Grúa Bandera</option>
-          </select>
+          <label class="block font-bold uppercase text-slate-600 mb-1">Tipo de Grúa</label>
+          <input type="text" data-meta="tipo" placeholder="Birriel / Monorriel" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">Dispositivo Bajo Gancho</label>
-          <input type="text" data-meta="dispositivo" placeholder="Gancho / Electroimán / Balancín" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Dispositivo Bajo Gancho</label>
+          <input type="text" data-meta="dispositivo" placeholder="Gancho / Balancín / Electroimán" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
 
         <div class="meta-span-2 lg:col-span-2">
-          <label class="block font-bold text-slate-600 uppercase mb-1">Técnico Responsable SANT CRANES *</label>
-          <input type="text" data-meta="tecnico" placeholder="Nombre del técnico asignado" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Técnico Responsable SANT CRANES</label>
+          <input type="text" data-meta="tecnico" placeholder="Nombre del técnico / ingeniero" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">Fecha de Entrega</label>
-          <input type="date" data-meta="fechaEntrega" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Fecha de Entrega</label>
+          <input type="date" data-meta="fechaEntrega" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
         <div>
-          <label class="block font-bold text-slate-600 uppercase mb-1">Fecha de Mantenimiento *</label>
-          <input type="date" data-meta="fechaMtto" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+          <label class="block font-bold uppercase text-slate-600 mb-1">Fecha de Mantenimiento</label>
+          <input type="date" data-meta="fechaMtto" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
-        <div class="meta-span-2 lg:col-span-2">
-          <label class="block font-bold text-slate-600 uppercase mb-1">Estatus del Servicio</label>
-          <select data-meta="estatus" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold bg-white focus:border-navy-900 focus:outline-none">
-            <option value="Operativa - Mantenimiento Completado">Operativa - Mantenimiento Completado</option>
+        <div>
+          <label class="block font-bold uppercase text-slate-600 mb-1">Estatus del Equipo</label>
+          <select data-meta="estatus" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 bg-white focus:border-navy-900 focus:outline-none">
+            <option value="Operativa - Servicio Concluido">Operativa - Servicio Concluido</option>
             <option value="Operativa con Observaciones Preventivas">Operativa con Observaciones Preventivas</option>
-            <option value="Requiere Refacciones / Seguimiento">Requiere Refacciones / Seguimiento</option>
-            <option value="Fuera de Servicio por Seguridad">Fuera de Servicio por Seguridad</option>
+            <option value="Requiere Mantenimiento Correctivo">Requiere Mantenimiento Correctivo</option>
+            <option value="Equipo Fuera de Servicio (Riesgo Crítico)">Equipo Fuera de Servicio (Riesgo Crítico)</option>
           </select>
+        </div>
+        <div>
+          <label class="block font-bold uppercase text-slate-600 mb-1">Recibe por Cliente</label>
+          <input type="text" data-meta="receptorCliente" placeholder="Nombre y puesto" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-navy-900 focus:outline-none" />
         </div>
       </div>
+
+      <!-- EVIDENCIA FOTOGRÁFICA: FICHA TÉCNICA DEL EQUIPO -->
+      <div id="photo_slot_ficha_tecnica" class="mt-4"></div>
     </section>
 
-    <!-- 2. PANEL KPI Y BARRA DE HERRAMIENTAS DE INSPECCIÓN -->
+    <!-- RESUMEN KPI Y BARRA DE LLENADO RÁPIDO -->
     <section class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 print-keep-together">
       <div class="kpi-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+        <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
           <div class="text-[11px] font-bold uppercase text-slate-500">Total Puntos</div>
           <div id="kpiTotal" class="font-display text-2xl font-extrabold text-navy-900">221</div>
         </div>
-        <div class="bg-sky-50 border border-sky-200 rounded-xl p-3">
+        <div class="rounded-xl bg-sky-50 border border-sky-200 p-3">
           <div class="text-[11px] font-bold uppercase text-sky-700">Evaluados</div>
           <div id="kpiEvaluated" class="font-display text-2xl font-extrabold text-sky-900">0 (0%)</div>
         </div>
-        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-          <div class="text-[11px] font-bold uppercase text-emerald-700">✓ OK (Conformes)</div>
+        <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
+          <div class="text-[11px] font-bold uppercase text-emerald-700">✓ En Buen Estado</div>
           <div id="kpiOk" class="font-display text-2xl font-extrabold text-emerald-800">0</div>
         </div>
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
-          <div class="text-[11px] font-bold uppercase text-amber-700">⚠ Prev. / Obs.</div>
+        <div class="rounded-xl bg-amber-50 border border-amber-200 p-3">
+          <div class="text-[11px] font-bold uppercase text-amber-700">⚠ Preventivo</div>
           <div id="kpiPrev" class="font-display text-2xl font-extrabold text-amber-800">0</div>
         </div>
-        <div class="bg-rose-50 border border-rose-200 rounded-xl p-3">
-          <div class="text-[11px] font-bold uppercase text-rose-700">✕ Corr. / Falla</div>
+        <div class="rounded-xl bg-rose-50 border border-rose-200 p-3">
+          <div class="text-[11px] font-bold uppercase text-rose-700">✕ Correctivo</div>
           <div id="kpiCorr" class="font-display text-2xl font-extrabold text-rose-800">0</div>
         </div>
-        <div class="bg-slate-100 border border-slate-300 rounded-xl p-3">
-          <div class="text-[11px] font-bold uppercase text-slate-600">N/A (No Aplica)</div>
+        <div class="rounded-xl bg-slate-100 border border-slate-300 p-3">
+          <div class="text-[11px] font-bold uppercase text-slate-600">— No Aplica</div>
           <div id="kpiNa" class="font-display text-2xl font-extrabold text-slate-700">0</div>
         </div>
       </div>
 
-      <!-- CONTROLES DE FILTRO Y MES ACTIVO -->
-      <div class="no-print flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200">
+      <div class="no-print flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200 text-xs">
         <div class="flex flex-wrap items-center gap-2">
-          <label class="text-xs font-bold uppercase text-slate-600">Mes activo para llenado rápido:</label>
-          <select id="activeMonthSelect" class="rounded-lg border border-slate-300 bg-amber-50 font-bold text-navy-900 px-3 py-1.5 text-xs">
+          <span class="font-bold uppercase text-navy-900">MES ACTIVO PARA LLENADO RÁPIDO:</span>
+          <select id="activeMonthSelect" class="rounded-lg border border-amber-400 bg-amber-50 font-bold text-navy-900 px-3 py-1.5 focus:outline-none">
             <option value="0">Enero (Ene)</option>
             <option value="1">Febrero (Feb)</option>
             <option value="2">Marzo (Mzo)</option>
@@ -525,34 +605,35 @@
             <option value="10">Noviembre (Nov)</option>
             <option value="11">Diciembre (Dic)</option>
           </select>
-          <span class="text-[11px] text-slate-500">Haz clic en cualquier celda de mes para alternar: <strong>— → ✓ → ⚠ → ✕ → N/A</strong></span>
+          <span class="text-slate-500">Haz clic en cualquier celda de mes para alternar: — → ✓ → ⚠ → ✕ → N/A</span>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <input type="text" id="searchInput" placeholder="Buscar componente o punto..." class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs w-56 focus:border-navy-900 focus:outline-none" />
-          <select id="statusFilter" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white">
-            <option value="all">Mostrar: Todos (221)</option>
-            <option value="findings">Solo Hallazgos (⚠ y ✕)</option>
-            <option value="evaluated">Solo Evaluados</option>
-            <option value="pending">Solo Pendientes</option>
+          <input type="text" id="searchInput" placeholder="Buscar punto de inspección..." class="rounded-lg border border-slate-300 px-3 py-1.5 w-56 focus:border-navy-900 focus:outline-none" />
+          <select id="statusFilter" class="rounded-lg border border-slate-300 px-3 py-1.5 bg-white focus:border-navy-900 focus:outline-none">
+            <option value="ALL">Todos los estados</option>
+            <option value="OK">Solo ✓ OK</option>
+            <option value="PREV">Solo ⚠ Preventivo</option>
+            <option value="CORR">Solo ✕ Correctivo</option>
+            <option value="PENDING">Pendientes sin evaluar</option>
           </select>
         </div>
       </div>
     </section>
 
-    <!-- 3. BLOQUES DE INSPECCIÓN (221 PUNTOS EXACTOS) -->
-    <div id="blocksContainer" class="space-y-6"></div>
+    <!-- BLOQUES 1 AL 6 DEL CHECKLIST (CADA UNO CON SU APARTADO DE EVIDENCIA FOTOGRÁFICA) -->
+    <div id="checklistContainer" class="space-y-6"></div>
 
-    <!-- 4. REFACCIONES REQUERIDAS -->
+    <!-- REFACCIONES REQUERIDAS -->
     <section class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm print-keep-together">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-200">
         <div>
-          <h2 class="font-display text-xl font-extrabold text-navy-900 uppercase">
-            Refacciones y Materiales Requeridos
+          <h2 class="font-display text-xl font-extrabold uppercase tracking-wide text-navy-900">
+            REFACCIONES Y COMPONENTES REQUERIDOS
           </h2>
-          <p class="text-xs text-slate-500">Registra los componentes detectados durante la inspección para cotización o reemplazo.</p>
+          <p class="text-xs text-slate-500">Listado técnico para cotización y programación de suministro multimarca SANT CRANES</p>
         </div>
-        <button type="button" onclick="addPartRow()" class="no-print bg-navy-900 hover:bg-navy-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition">
+        <button type="button" onclick="addPartRow()" class="no-print px-3.5 py-2 rounded-lg text-xs font-bold bg-navy-900 hover:bg-navy-800 text-amber-400 transition">
           + Agregar Refacción
         </button>
       </div>
@@ -574,38 +655,32 @@
       </div>
     </section>
 
-    <!-- 5. OBSERVACIONES GENERALES Y FIRMAS DIGITALES -->
+    <!-- OBSERVACIONES GENERALES Y FIRMAS DE CONFORMIDAD -->
     <section class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-6 print-keep-together">
       <div>
-        <label class="block font-display text-lg font-extrabold text-navy-900 uppercase mb-2">
-          Observaciones Generales / Recomendaciones Técnicas
-        </label>
-        <textarea id="generalNotes" rows="3" placeholder="Anota conclusiones generales, condiciones de seguridad encontradas o recomendaciones de operación..." class="w-full rounded-xl border border-slate-300 p-3 text-sm focus:border-navy-900 focus:outline-none"></textarea>
+        <h2 class="font-display text-xl font-extrabold uppercase tracking-wide text-navy-900 mb-2">
+          OBSERVACIONES GENERALES Y RECOMENDACIONES TÉCNICAS
+        </h2>
+        <textarea id="generalNotes" rows="3" placeholder="Anota hallazgos relevantes, condiciones de seguridad, recomendaciones de operación o trabajos pendientes..." class="w-full rounded-xl border border-slate-300 p-3 text-xs focus:border-navy-900 focus:outline-none"></textarea>
       </div>
 
       <div class="signatures-grid grid md:grid-cols-2 gap-6 pt-2">
-        <!-- Firma Técnico -->
-        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase text-navy-900">Firma del Técnico SANT CRANES</span>
-            <button type="button" onclick="clearSignature('techPad')" class="no-print text-xs text-rose-600 hover:underline font-semibold">
-              Limpiar firma
-            </button>
+        <div class="border border-slate-300 rounded-xl p-4 bg-slate-50">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase text-navy-900">Firma Técnico Especialista SANT CRANES</span>
+            <button type="button" onclick="clearSignature('techPad')" class="no-print text-[11px] font-semibold text-rose-600 hover:underline">Borrar firma</button>
           </div>
-          <canvas id="techPad" width="460" height="140" class="w-full h-36 bg-white border border-slate-300 rounded-lg touch-none cursor-crosshair"></canvas>
-          <p class="text-[11px] text-slate-500 text-center">Técnico de Servicio Especializado — SANT CRANES</p>
+          <canvas id="techPad" width="520" height="140" class="w-full h-32 bg-white border border-dashed border-slate-400 rounded-lg cursor-crosshair touch-none"></canvas>
+          <p class="text-[11px] text-slate-500 mt-1.5 text-center">Nombre y firma de quien ejecuta el mantenimiento</p>
         </div>
 
-        <!-- Firma Cliente -->
-        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase text-navy-900">Firma de Conformidad del Cliente</span>
-            <button type="button" onclick="clearSignature('clientPad')" class="no-print text-xs text-rose-600 hover:underline font-semibold">
-              Limpiar firma
-            </button>
+        <div class="border border-slate-300 rounded-xl p-4 bg-slate-50">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase text-navy-900">Firma de Conformidad Cliente / Planta</span>
+            <button type="button" onclick="clearSignature('clientPad')" class="no-print text-[11px] font-semibold text-rose-600 hover:underline">Borrar firma</button>
           </div>
-          <canvas id="clientPad" width="460" height="140" class="w-full h-36 bg-white border border-slate-300 rounded-lg touch-none cursor-crosshair"></canvas>
-          <input type="text" data-meta="receptorCliente" placeholder="Nombre y puesto quien recibe en planta" class="meta-field w-full rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-center focus:border-navy-900 focus:outline-none" />
+          <canvas id="clientPad" width="520" height="140" class="w-full h-32 bg-white border border-dashed border-slate-400 rounded-lg cursor-crosshair touch-none"></canvas>
+          <p class="text-[11px] text-slate-500 mt-1.5 text-center">Nombre y firma de recepción y validación en sitio</p>
         </div>
       </div>
     </section>
@@ -613,48 +688,740 @@
   </main>
 
   <script>
-    // =========================================================================
-    // CONFIGURACIÓN DEL BACKEND (PEGA AQUÍ LA URL /exec DE Code_Checklist.gs)
-    // =========================================================================
     const APPS_SCRIPT_URL = "";
-
+    const STORAGE_KEY = "sant_cranes_checklist_frc001_v1";
     const MONTHS = ["Ene", "Feb", "Mzo", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     const STATUS_CYCLE = ["", "OK", "PREV", "CORR", "NA"];
     const STATUS_LABELS = {
-      "": { symbol: "—", cls: "st-empty" },
-      "OK": { symbol: "✓", cls: "st-ok" },
-      "PREV": { symbol: "⚠", cls: "st-prev" },
-      "CORR": { symbol: "✕", cls: "st-corr" },
-      "NA": { symbol: "N/A", cls: "st-na" }
+      "":     { symbol: "—",   cls: "st-empty" },
+      "OK":   { symbol: "✓",   cls: "st-ok" },
+      "PREV": { symbol: "⚠",   cls: "st-prev" },
+      "CORR": { symbol: "✕",   cls: "st-corr" },
+      "NA":   { symbol: "N/A", cls: "st-na" }
     };
 
-    const CHECKLIST_DATA = [{"id": "puente", "title": "1. Movimiento: Puente", "subsections": [{"name": "Motores", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Lubricar Rodamientos.", "Inspección visual de carcasa y ventilador.", "Revisar temperatura de operación.", "Apriete de tornillería de fijación."]}, {"name": "Frenos", "items": ["Apriete de Conexiones.", "Ajuste de GAP. (Entre Hierro)", "Revisar Disco de Fricción.", "Revisar bobina de freno y rectificador.", "Prueba de frenado sin deslizamiento."]}, {"name": "Cabezales", "items": ["Apriete de Tornilos Puente-Cabezal.", "Apriete de Tornillos de Capsulas.", "Apriete de Tornillos Topes del Puente", "Inspección de desgaste en cejas de ruedas.", "Lubricación de baleros de ruedas.", "Revisión de gomas amortiguador (topes).", "Revisión de daños por grietas en estructura."]}, {"name": "Reductor", "items": ["Revisar Soldadura de Base.", "Apriete de Tornillo Base.", "Revisión de Amortiguador.", "Nivel y estado de aceite lubricante.", "Revisión de fugas por retenes y empaques.", "Limpieza de respiradero.", "Ruido o vibración anormal en operación.", "Temperatura de carcasa en operación.", "Estado de tapón de drenado y nivel."]}, {"name": "Acoplamiento del reductor", "items": ["Revisión de Cuñero Flecha Hueca", "Revisión de Cuña.", "Revisión de Seguro Truack", "Alineación y apriete de opresores."]}, {"name": "Puente (Estructural)", "items": ["Limpieza de Plataformas.", "Sistema Mens. Carretillas y Viga", "Revisión de Riel.", "Inspección de soldaduras principales de trabe.", "Estado de pasillos, barandales y rodapiés.", "Revisión de pernos de unión de trabe.", "Estado de pintura y corrosión estructural."]}]}, {"id": "carro", "title": "2. Movimiento: Carro", "subsections": [{"name": "Motores", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Revisar Rodamientos (Ruidos)", "Inspección de ventilador y cubierta.", "Apriete de base de motor."]}, {"name": "Frenos", "items": ["Apriete de Conexiones.", "Ajuste de GAP. (Entre Hierro)", "Revisar Disco de Fricción.", "Revisar bobina y rectificador.", "Prueba de retención de freno."]}, {"name": "Cabezales", "items": ["Apriete de Tornillos de Capsulas.", "Revisión de gomas amortiguador.", "Revision de Daños por Grietas", "Desgaste de pestañas y banda de rodadura.", "Lubricación de rodamientos de rueda.", "Apriete de topes de carro."]}, {"name": "Reductor", "items": ["Revisar Soldadura de Base.", "Apriete de Tornillo Base.", "Revisión de Amortiguador.", "Nivel y calidad de aceite.", "Revisión de retenes (sin fugas).", "Limpieza de válvula respiradero.", "Revisión de ruidos anormales.", "Temperatura de trabajo.", "Apriete de tornillería de carcasa."]}, {"name": "Acoplamiento del reductor", "items": ["Revisión de Cuñero Flecha Hueca", "Revisión de Cuña.", "Revisión de Seguro Truack", "Revisión de juego axial/radial."]}, {"name": "Estructura del carro", "items": ["Revisar uniones (soldaduras)."]}]}, {"id": "carro_b", "title": "3. Movimiento: Carro B", "subsections": [{"name": "Motores", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Revisar Rodamientos (Ruidos)", "Inspección de ventilador y cubierta.", "Apriete de base de motor."]}, {"name": "Frenos", "items": ["Apriete de Conexiones.", "Ajuste de GAP. (Entre Hierro)", "Revisar Disco de Fricción.", "Revisar bobina y rectificador.", "Prueba de retención de freno."]}, {"name": "Cabezales", "items": ["Apriete de Tornillos de Capsulas.", "Revisión de gomas amortiguador.", "Revision de Daños por Grietas", "Desgaste de pestañas y banda de rodadura.", "Lubricación de rodamientos de rueda.", "Apriete de topes de carro B."]}]}, {"id": "gancho_ppl", "title": "4. Movimiento: Gancho PPL", "subsections": [{"name": "Aparejo Inferior.", "items": ["Rodamientos de poleas.", "Rodamiento Axial.", "Lubricación.", "Inspección de garganta de poleas.", "Estado de guardacables.", "Apertura de garganta de gancho (deformación).", "Seguro (pestillo) de seguridad de gancho.", "Giro libre del gancho sobre su eje.", "Inspección de fisuras en cuello y cuerpo de gancho.", "Apriete de tuerca y seguro de gancho."]}, {"name": "Aparejo Superior.", "items": ["Rodamientos de poleas.", "Lubricación.", "Poleas.", "Perno eje y seguros de poleas superiores."]}, {"name": "Motor", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Lubricar Rodamientos.", "Medición de aislamiento de devanados.", "Estado de ventilador y tolva.", "Sensor térmico (termistor/klixon).", "Apriete de tornillería de montaje."]}, {"name": "Freno", "items": ["Apriete de Conexiones de bobina", "Reviar nivel de aceite hidraulico", "Cambio de Aceite.", "Ajuste de carrera y desgaste de balatas/discos."]}, {"name": "Tambor", "items": ["Rodamiento pedestal", "Cople.", "Soldadura de uniones.", "Estado de ranuras del tambor.", "Guía de cable (arnés/anillo guía).", "Grampas y tornillos de fijación de punta de cable."]}, {"name": "Reductor", "items": ["Revisar Soldadura de Base.", "Apriete de Tornillo Base.", "Estado de Engranes.", "Nivel de aceite lubricante.", "Cambio / análisis de aceite.", "Revisión de retenes y sellos.", "Limpieza de respiradero.", "Revisión de rodamientos internos (ruido/juego).", "Temperatura de operación.", "Apriete de tapas de inspección.", "Estado de cople de alta velocidad."]}, {"name": "Gancho", "items": ["Fusibles Fuerza Inversor.", "Circuito de Protección de Control.", "Contactores y Relevadores.", "Resistencias de frenado dinámico.", "Cable de acero (alambres rotos, cocas, corrosión).", "Lubricación de cable de acero.", "Punto muerto / anclaje fijo del cable.", "Celda de carga / limitador de sobrecarga.", "Borneras de control de polipasto.", "Prueba de izaje y descenso en vacío."]}, {"name": "Interruptores de Limite", "items": ["Interruptor Engranado Gancho.", "Interruptor Limite Peso Gancho."]}]}, {"id": "gancho_aux", "title": "5. Movimiento: Gancho Aux.", "subsections": [{"name": "Aparejo Inferior.", "items": ["Rodamientos de poleas.", "Rodamiento Axial.", "Lubricación.", "Inspección de garganta de poleas.", "Estado de guardacables.", "Apertura de garganta de gancho (deformación).", "Seguro (pestillo) de seguridad de gancho.", "Giro libre del gancho sobre su eje.", "Inspección de fisuras en cuello y cuerpo de gancho.", "Apriete de tuerca y seguro de gancho."]}, {"name": "Aparejo Superior.", "items": ["Rodamientos de poleas.", "Lubricación.", "Poleas.", "Perno eje y seguros de poleas superiores."]}, {"name": "Motor", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Lubricar Rodamientos.", "Medición de aislamiento de devanados.", "Estado de ventilador y tolva.", "Sensor térmico (termistor/klixon).", "Apriete de tornillería de montaje."]}, {"name": "Freno", "items": ["Apriete de Conexiones de bobina", "Reviar nivel de aceite hidraulico", "Cambio de Aceite.", "Ajuste de carrera y desgaste de balatas/discos."]}, {"name": "Tambor", "items": ["Rodamiento pedestal", "Cople.", "Soldadura de uniones.", "Estado de ranuras del tambor.", "Guía de cable (arnés/anillo guía).", "Grampas y tornillos de fijación de punta de cable."]}, {"name": "Reductor", "items": ["Revisar Soldadura de Base.", "Apriete de Tornillo Base.", "Estado de Engranes.", "Nivel de aceite lubricante.", "Cambio / análisis de aceite.", "Revisión de retenes y sellos.", "Limpieza de respiradero.", "Revisión de rodamientos internos (ruido/juego).", "Temperatura de operación.", "Apriete de tapas de inspección.", "Estado de cople de alta velocidad."]}, {"name": "Gancho", "items": ["Fusibles Fuerza Inversor.", "Circuito de Protección de Control.", "Contactores y Relevadores.", "Resistencias de frenado dinámico.", "Cable de acero (alambres rotos, cocas, corrosión).", "Lubricación de cable de acero.", "Punto muerto / anclaje fijo del cable.", "Celda de carga / limitador de sobrecarga.", "Borneras de control de polipasto.", "Prueba de izaje y descenso en vacío."]}, {"name": "Interruptores de Limite", "items": ["Interruptor limite de puente.", "Interruptor Engranado Gancho.", "Interruptor Limite Peso Gancho.", "Sistema anticolisión (sensor óptico/láser)."]}, {"name": "Radio Control", "items": ["Tablero de interconexion (conexiones)", "Display magnetos (conexiones)", "Master gancho.", "Joysticks y selectores de transmisor.", "Botón de paro de emergencia (seta).", "Estado de baterías y cargador.", "Prueba de alcance y respuesta de comandos."]}]}, {"id": "electrico", "title": "6. Eléctrico Control y Fuerza", "subsections": [{"name": "Puente", "items": ["Fusibles Protección Principal.", "Fusibles Fuerza Inversor.", "Circuito de Protección de Control.", "Contactores principales y auxiliares.", "Transformador de control (voltajes).", "Limpieza y apriete de clemas en tablero.", "Sistema de alimentación principal (blindobarra / colectores)."]}, {"name": "Inversor.", "items": ["Secuencia.", "Programación.", "Lineas de Fuerza (Apretar)", "Ventiladores internos de enfriamiento.", "Historial de fallas y alarmas."]}, {"name": "Carro", "items": ["Fusibles Fuerza Inversor.", "Circuito de Protección de Control.", "Contactores y Relevadores.", "Cable plano festoon y carretillas portacables.", "Cajas de conexiones en carro.", "Alumbrado de nave / torreta y sirena de advertencia.", "Puesta a tierra de estructura y tableros.", "Paro de emergencia general."]}]}];
-    const STORAGE_KEY = "sant_cranes_frc001_v2";
+    const CHECKLIST_DATA = [
+  {
+    "id": "block_1",
+    "title": "1. MOVIMIENTO: PUENTE",
+    "subsections": [
+      {
+        "name": "Motores",
+        "items": [
+          "Apriete de conexiones.",
+          "Revisar Corrientes",
+          "Lubricar Rodamientos.",
+          "Apriete de Tornillería de Montaje.",
+          "Revisar Ventilador y Tapa.",
+          "Limpieza General de Carcasa."
+        ]
+      },
+      {
+        "name": "Frenos",
+        "items": [
+          "Apriete de Conexiones.",
+          "Ajuste de GAP. (Entre Hierro)",
+          "Revisar Disco de Fricción.",
+          "Revisar Rectificador.",
+          "Limpieza General."
+        ]
+      },
+      {
+        "name": "Cabezales",
+        "items": [
+          "Apriete de Tornilos Puente-Cabezal.",
+          "Apriete de Tornillos de Capsulas.",
+          "Apriete de Tornillos Topes del Puente",
+          "Revisión de Gomas Amortiguador.",
+          "Revisión de Daños por Grietas",
+          "Revisión de Desgaste de Ruedas.",
+          "Lubricación de Rodamientos y Engrane."
+        ]
+      },
+      {
+        "name": "Reductor",
+        "items": [
+          "Revisar Soldadura de Base.",
+          "Apriete de Tornillo Base.",
+          "Revisión de Amortiguador.",
+          "Estado de Engranes.",
+          "Estado de Rodamientos.",
+          "Estado de Flechas.",
+          "Nivel de Aceite.",
+          "Cambio de Aceite.",
+          "Revisión de Fugas y Retenes."
+        ]
+      },
+      {
+        "name": "Acoplamiento del reductor",
+        "items": [
+          "Revisión de Cuñero Flecha Hueca",
+          "Revisión de Cuña.",
+          "Revisión de Seguro Truack",
+          "Lubricación de Flecha."
+        ]
+      },
+      {
+        "name": "Puente (Estructural)",
+        "items": [
+          "Limpieza de Plataformas.",
+          "Sistema Mens. Carretillas y Viga",
+          "Revisión de Riel.",
+          "Revisión de Trole y Cable Plano.",
+          "Apriete de Tornillería Estructural.",
+          "Revisión de Soldaduras.",
+          "Estado de pintura y corrosión estructural."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "block_2",
+    "title": "2. MOVIMIENTO: CARRO",
+    "subsections": [
+      {
+        "name": "Motores",
+        "items": [
+          "Apriete de conexiones.",
+          "Revisar Corrientes",
+          "Revisar Rodamientos (Ruidos)",
+          "Apriete de Tornillería de Montaje.",
+          "Limpieza General."
+        ]
+      },
+      {
+        "name": "Frenos",
+        "items": [
+          "Apriete de Conexiones.",
+          "Ajuste de GAP. (Entre Hierro)",
+          "Revisar Disco de Fricción.",
+          "Revisar Rectificador.",
+          "Limpieza General."
+        ]
+      },
+      {
+        "name": "Cabezales",
+        "items": [
+          "Apriete de Tornillos de Capsulas.",
+          "Revisión de gomas amortiguador.",
+          "Revision de Daños por Grietas",
+          "Revisión de Desgaste de Ruedas.",
+          "Lubricación de Rodamientos.",
+          "Apriete de Topes."
+        ]
+      },
+      {
+        "name": "Reductor",
+        "items": [
+          "Revisar Soldadura de Base.",
+          "Apriete de Tornillo Base.",
+          "Revisión de Amortiguador.",
+          "Estado de Engranes.",
+          "Estado de Rodamientos.",
+          "Estado de Flechas.",
+          "Nivel de Aceite.",
+          "Cambio de Aceite.",
+          "Revisión de Fugas y Retenes."
+        ]
+      },
+      {
+        "name": "Acoplamiento del reductor",
+        "items": [
+          "Revisión de Cuñero Flecha Hueca",
+          "Revisión de Cuña.",
+          "Revisión de Seguro Truack",
+          "Lubricación de Flecha."
+        ]
+      },
+      {
+        "name": "Estructura del carro",
+        "items": [
+          "Revisar uniones (soldaduras)."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "block_3",
+    "title": "3. MOVIMIENTO: CARRO B",
+    "subsections": [
+      {
+        "name": "Motores",
+        "items": [
+          "Apriete de conexiones.",
+          "Revisar Corrientes",
+          "Revisar Rodamientos (Ruidos)",
+          "Apriete de Tornillería de Montaje.",
+          "Limpieza General."
+        ]
+      },
+      {
+        "name": "Frenos",
+        "items": [
+          "Apriete de Conexiones.",
+          "Ajuste de GAP. (Entre Hierro)",
+          "Revisar Disco de Fricción.",
+          "Revisar Rectificador.",
+          "Limpieza General."
+        ]
+      },
+      {
+        "name": "Cabezales",
+        "items": [
+          "Apriete de Tornillos de Capsulas.",
+          "Revisión de gomas amortiguador.",
+          "Revision de Daños por Grietas",
+          "Revisión de Desgaste de Ruedas.",
+          "Lubricación de Rodamientos.",
+          "Apriete de topes de carro B."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "block_4",
+    "title": "4. MOVIMIENTO: GANCHO PPL",
+    "subsections": [
+      {
+        "name": "Aparejo Inferior.",
+        "items": [
+          "Rodamientos de poleas.",
+          "Rodamiento Axial.",
+          "Lubricación.",
+          "Poleas.",
+          "Perno Principal.",
+          "Seguro de Gancho (Pestillo).",
+          "Apertura de Garganta de Gancho.",
+          "Desgaste en Asiento de Gancho.",
+          "Tuerca y Seguro de Gancho.",
+          "Tornillería y Guardas de Poleas."
+        ]
+      },
+      {
+        "name": "Aparejo Superior.",
+        "items": [
+          "Rodamientos de poleas.",
+          "Lubricación.",
+          "Poleas.",
+          "Perno y Seguros."
+        ]
+      },
+      {
+        "name": "Motor",
+        "items": [
+          "Apriete de conexiones.",
+          "Revisar Corrientes",
+          "Lubricar Rodamientos.",
+          "Apriete de Tornillería.",
+          "Ventilador y Tapa.",
+          "Resistencia de Aislamiento.",
+          "Limpieza General."
+        ]
+      },
+      {
+        "name": "Freno",
+        "items": [
+          "Apriete de Conexiones de bobina",
+          "Reviar nivel de aceite hidraulico",
+          "Cambio de Aceite.",
+          "Ajuste de Balatas / Disco de Freno."
+        ]
+      },
+      {
+        "name": "Tambor",
+        "items": [
+          "Rodamiento pedestal",
+          "Cople.",
+          "Soldadura de uniones.",
+          "Ranuras de Tambor.",
+          "Grampas de Sujeción de Cable.",
+          "Estado y Lubricación de Cable de Acero."
+        ]
+      },
+      {
+        "name": "Reductor",
+        "items": [
+          "Revisar Soldadura de Base.",
+          "Apriete de Tornillo Base.",
+          "Estado de Engranes.",
+          "Estado de Rodamientos.",
+          "Estado de Flechas.",
+          "Nivel de Aceite.",
+          "Cambio de Aceite.",
+          "Revisión de Fugas y Retenes.",
+          "Respiradero de Reductor.",
+          "Acoplamiento Motor-Reductor.",
+          "Limpieza Exterior."
+        ]
+      },
+      {
+        "name": "Gancho",
+        "items": [
+          "Fusibles Fuerza Inversor.",
+          "Circuito de Protección de Control.",
+          "Contactores y Relevadores.",
+          "Apriete de Terminales.",
+          "Resistencia de Frenado.",
+          "Variador de Frecuencia (Parámetros).",
+          "Celdas de Carga / Sensor.",
+          "Encoder.",
+          "Limpieza de Tablero.",
+          "Ventilación de Gabinete."
+        ]
+      },
+      {
+        "name": "Interruptores de Limite",
+        "items": [
+          "Interruptor Engranado Gancho.",
+          "Interruptor Limite Peso Gancho."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "block_5",
+    "title": "5. MOVIMIENTO: GANCHO AUX.",
+    "subsections": [
+      {
+        "name": "Aparejo Inferior.",
+        "items": [
+          "Rodamientos de poleas.",
+          "Rodamiento Axial.",
+          "Lubricación.",
+          "Poleas.",
+          "Perno Principal.",
+          "Seguro de Gancho (Pestillo).",
+          "Apertura de Garganta de Gancho.",
+          "Desgaste en Asiento de Gancho.",
+          "Tuerca y Seguro de Gancho.",
+          "Tornillería y Guardas de Poleas."
+        ]
+      },
+      {
+        "name": "Aparejo Superior.",
+        "items": [
+          "Rodamientos de poleas.",
+          "Lubricación.",
+          "Poleas.",
+          "Perno y Seguros."
+        ]
+      },
+      {
+        "name": "Motor",
+        "items": [
+          "Apriete de conexiones.",
+          "Revisar Corrientes",
+          "Lubricar Rodamientos.",
+          "Apriete de Tornillería.",
+          "Ventilador y Tapa.",
+          "Resistencia de Aislamiento.",
+          "Limpieza General."
+        ]
+      },
+      {
+        "name": "Freno",
+        "items": [
+          "Apriete de Conexiones de bobina",
+          "Reviar nivel de aceite hidraulico",
+          "Cambio de Aceite.",
+          "Ajuste de Balatas / Disco de Freno."
+        ]
+      },
+      {
+        "name": "Tambor",
+        "items": [
+          "Rodamiento pedestal",
+          "Cople.",
+          "Soldadura de uniones.",
+          "Ranuras de Tambor.",
+          "Grampas de Sujeción de Cable.",
+          "Estado y Lubricación de Cable de Acero."
+        ]
+      },
+      {
+        "name": "Reductor",
+        "items": [
+          "Revisar Soldadura de Base.",
+          "Apriete de Tornillo Base.",
+          "Estado de Engranes.",
+          "Estado de Rodamientos.",
+          "Estado de Flechas.",
+          "Nivel de Aceite.",
+          "Cambio de Aceite.",
+          "Revisión de Fugas y Retenes.",
+          "Respiradero de Reductor.",
+          "Acoplamiento Motor-Reductor.",
+          "Limpieza Exterior."
+        ]
+      },
+      {
+        "name": "Gancho",
+        "items": [
+          "Fusibles Fuerza Inversor.",
+          "Circuito de Protección de Control.",
+          "Contactores y Relevadores.",
+          "Apriete de Terminales.",
+          "Resistencia de Frenado.",
+          "Variador de Frecuencia (Parámetros).",
+          "Celdas de Carga / Sensor.",
+          "Encoder.",
+          "Limpieza de Tablero.",
+          "Ventilación de Gabinete."
+        ]
+      },
+      {
+        "name": "Interruptores de Limite",
+        "items": [
+          "Interruptor limite de puente.",
+          "Interruptor Engranado Gancho.",
+          "Interruptor Limite Peso Gancho.",
+          "Interruptor Limite Superior Aux."
+        ]
+      },
+      {
+        "name": "Radio Control",
+        "items": [
+          "Tablero de interconexion (conexiones)",
+          "Display magnetos (conexiones)",
+          "Master gancho.",
+          "Joysticks y Selectores.",
+          "Paro de Emergencia.",
+          "Estado de baterías y cargador.",
+          "Prueba de alcance y respuesta de comandos."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "block_6",
+    "title": "6. ELÉCTRICO CONTROL Y FUERZA",
+    "subsections": [
+      {
+        "name": "Puente",
+        "items": [
+          "Fusibles Protección Principal.",
+          "Fusibles Fuerza Inversor.",
+          "Circuito de Protección de Control.",
+          "Contactores y Relevadores.",
+          "Apriete de Terminales y Clemas.",
+          "Barras Conductoras / Toma Corrientes.",
+          "Limpieza de Tablero Principal."
+        ]
+      },
+      {
+        "name": "Inversor.",
+        "items": [
+          "Secuencia.",
+          "Programación.",
+          "Lineas de Fuerza (Apretar)",
+          "Resistencias de Frenado.",
+          "Ventiladores y Disipadores."
+        ]
+      },
+      {
+        "name": "Carro",
+        "items": [
+          "Fusibles Fuerza Inversor.",
+          "Circuito de Protección de Control.",
+          "Contactores y Relevadores.",
+          "Apriete de Terminales.",
+          "Cableado de Control y Festoon.",
+          "Transformador de Control.",
+          "Cajas de Conexión.",
+          "Limpieza de Tablero Carro."
+        ]
+      }
+    ]
+  }
+];
 
     let state = {
-      meta: {
-        cliente: "",
-        proyecto: "",
-        pedido: "",
-        periodo: "2026 - 2027",
-        serie: "",
-        maquina: "",
-        area: "",
-        capacidad: "",
-        tipo: "Grúa Viajera Birriel",
-        dispositivo: "",
-        tecnico: "",
-        fechaEntrega: "",
-        fechaMtto: new Date().toISOString().slice(0, 10),
-        estatus: "Operativa - Mantenimiento Completado",
-        receptorCliente: ""
-      },
+      meta: {},
       items: {},
-      parts: [
-        { qty: "", unit: "Pza", desc: "", partNo: "", priority: "Media - Programar" }
-      ],
-      generalNotes: ""
+      parts: [{ qty: "", unit: "Pza", desc: "", partNo: "", priority: "Media - Programar" }],
+      generalNotes: "",
+      photos: {}
     };
+
+    function loadLocal() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state.meta = parsed.meta || {};
+          state.items = parsed.items || {};
+          state.parts = (parsed.parts && parsed.parts.length) ? parsed.parts : state.parts;
+          state.generalNotes = parsed.generalNotes || "";
+          state.photos = parsed.photos || {};
+        }
+      } catch (e) {
+        console.warn("Error leyendo almacenamiento local:", e);
+      }
+    }
+
+    function saveLocal() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn("Error guardando almacenamiento local:", e);
+      }
+    }
+
+    // =========================================================================
+    // MÓDULO DE EVIDENCIA FOTOGRÁFICA POR APARTADO (CON COMPRESIÓN AUTOMÁTICA)
+    // =========================================================================
+    function renderPhotoEvidenceSlot(slotId, sectionTitle) {
+      const photoObj = (state.photos && state.photos[slotId]) ? state.photos[slotId] : null;
+      const hasPhoto = Boolean(photoObj && photoObj.dataUrl);
+      const captionVal = photoObj ? (photoObj.caption || "") : "";
+      const safeTitle = escapeHtml(sectionTitle);
+
+      return `
+        <div class="photo-evidence-box rounded-xl border border-slate-200 bg-slate-50/90 p-3 transition" data-has-photo="${hasPhoto ? "true" : "false"}">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-navy-900 text-amber-400 text-sm font-bold shrink-0">📷</span>
+              <div>
+                <div class="text-xs font-bold uppercase tracking-wide text-navy-900">
+                  Evidencia Fotográfica — ${safeTitle}
+                </div>
+                <div class="no-print text-[11px] text-slate-500">
+                  ${hasPhoto ? "Foto cargada y lista para impresión estática en reporte." : "Toma una foto directo con la cámara del dispositivo o súbela desde galería."}
+                </div>
+              </div>
+            </div>
+
+            <div class="no-print flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                data-slot="${slotId}"
+                data-section="${safeTitle}"
+                onclick="triggerDeviceCamera(this.dataset.slot, this.dataset.section)"
+                class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-navy-900 hover:bg-navy-800 text-amber-400 shadow-sm transition"
+              >
+                <span>📸 ${hasPhoto ? "Tomar Nueva Foto" : "Tomar Foto"}</span>
+              </button>
+
+              <input
+                id="cam_input_${slotId}"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                data-slot="${slotId}"
+                data-section="${safeTitle}"
+                class="hidden"
+                onchange="handlePhotoUpload(event, this.dataset.slot, this.dataset.section)"
+              />
+
+              <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-sm transition">
+                <span>🖼️ Galería</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  data-slot="${slotId}"
+                  data-section="${safeTitle}"
+                  class="hidden"
+                  onchange="handlePhotoUpload(event, this.dataset.slot, this.dataset.section)"
+                />
+              </label>
+
+              ${hasPhoto ? `
+                <button type="button" onclick="removePhoto('${slotId}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-100 hover:bg-rose-200 text-rose-700 transition">
+                  ✕ Quitar
+                </button>
+              ` : ""}
+            </div>
+          </div>
+
+          ${hasPhoto ? `
+            <div class="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div class="photo-evidence-frame shadow-sm">
+                <img src="${photoObj.dataUrl}" alt="Evidencia ${safeTitle}" />
+              </div>
+              <div class="flex-1 w-full space-y-1.5">
+                <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-navy-900 text-amber-400">
+                  EVIDENCIA VISUAL DEL APARTADO
+                </span>
+                <label class="no-print block text-[11px] font-semibold text-slate-600">
+                  Descripción / Pie de foto (opcional, se incluye al imprimir):
+                </label>
+                <input
+                  type="text"
+                  value="${escapeHtml(captionVal)}"
+                  oninput="updatePhotoCaption('${slotId}', this.value)"
+                  placeholder="Ej. Inspección visual de componentes, estado general, placa de datos..."
+                  class="photo-caption-input w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-navy-900 focus:outline-none"
+                />
+              </div>
+            </div>
+          ` : ""}
+        </div>
+      `;
+    }
+
+    function renderFichaPhotoSlot() {
+      const el = document.getElementById("photo_slot_ficha_tecnica");
+      if (el) {
+        el.innerHTML = renderPhotoEvidenceSlot("ficha_tecnica", "Ficha Técnica del Equipo y Orden de Servicio");
+      }
+    }
+
+    let activeCameraStream = null;
+    let activeCameraSlot = null;
+    let activeCameraSection = "";
+    let currentFacingMode = "environment";
+
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || "") ||
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform || ""));
+    }
+
+    async function triggerDeviceCamera(slotId, sectionTitle) {
+      const nativeCamInput = document.getElementById("cam_input_" + slotId);
+
+      // En celulares y tablets, capture="environment" abre directamente la cámara trasera nativa con flash y autoenfoque
+      if (isMobileDevice() || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (nativeCamInput) nativeCamInput.click();
+        return;
+      }
+
+      // En laptop/escritorio, intentamos abrir la cámara en vivo del dispositivo; si no hay webcam o se bloquea, cae al selector nativo
+      activeCameraSlot = slotId;
+      activeCameraSection = sectionTitle;
+      currentFacingMode = "environment";
+      await openLiveCameraModal();
+    }
+
+    async function openLiveCameraModal() {
+      const modal = document.getElementById("cameraCaptureModal");
+      const video = document.getElementById("cameraLiveVideo");
+      const titleEl = document.getElementById("cameraModalSectionTitle");
+      if (titleEl) titleEl.textContent = activeCameraSection || "Evidencia Fotográfica";
+
+      stopCameraStream();
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: currentFacingMode },
+            width: { ideal: 1280 },
+            height: { ideal: 960 }
+          },
+          audio: false
+        });
+        activeCameraStream = stream;
+        video.srcObject = stream;
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      } catch (err) {
+        // Fallback inmediato al input nativo si no se detecta webcam o no hay permisos
+        closeLiveCameraModal();
+        const nativeCamInput = document.getElementById("cam_input_" + activeCameraSlot);
+        if (nativeCamInput) nativeCamInput.click();
+      }
+    }
+
+    async function switchLiveCameraFacing() {
+      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+      await openLiveCameraModal();
+    }
+
+    function stopCameraStream() {
+      if (activeCameraStream) {
+        activeCameraStream.getTracks().forEach(track => track.stop());
+        activeCameraStream = null;
+      }
+      const video = document.getElementById("cameraLiveVideo");
+      if (video) video.srcObject = null;
+    }
+
+    function closeLiveCameraModal() {
+      stopCameraStream();
+      const modal = document.getElementById("cameraCaptureModal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    }
+
+    function captureLiveCameraPhoto() {
+      const video = document.getElementById("cameraLiveVideo");
+      if (!video || !video.videoWidth || !video.videoHeight) return;
+
+      saveProcessedImage(video, video.videoWidth, video.videoHeight, activeCameraSlot, activeCameraSection);
+      closeLiveCameraModal();
+    }
+
+    function saveProcessedImage(sourceEl, srcWidth, srcHeight, slotId, sectionTitle) {
+      const MAX_DIM = 900;
+      let width = srcWidth;
+      let height = srcHeight;
+
+      if (width > height) {
+        if (width > MAX_DIM) {
+          height = Math.round((height * MAX_DIM) / width);
+          width = MAX_DIM;
+        }
+      } else {
+        if (height > MAX_DIM) {
+          width = Math.round((width * MAX_DIM) / height);
+          height = MAX_DIM;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(sourceEl, 0, 0, width, height);
+
+      const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.78);
+      if (!state.photos) state.photos = {};
+      const prevCaption = (state.photos[slotId] && state.photos[slotId].caption) || "";
+      state.photos[slotId] = {
+        section: sectionTitle,
+        dataUrl: compressedDataUrl,
+        caption: prevCaption
+      };
+      saveLocal();
+      renderFichaPhotoSlot();
+      renderBlocks();
+    }
+
+    function handlePhotoUpload(event, slotId, sectionTitle) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          saveProcessedImage(img, img.width, img.height, slotId, sectionTitle);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = "";
+    }
+
+    function updatePhotoCaption(slotId, value) {
+      if (!state.photos) state.photos = {};
+      if (state.photos[slotId]) {
+        state.photos[slotId].caption = value;
+        saveLocal();
+      }
+    }
+
+    function removePhoto(slotId) {
+      if (state.photos && state.photos[slotId]) {
+        delete state.photos[slotId];
+        saveLocal();
+        renderFichaPhotoSlot();
+        renderBlocks();
+      }
+    }
 
     function makeItemKey(bIdx, sIdx, iIdx) {
       return `${bIdx}_${sIdx}_${iIdx}`;
@@ -674,49 +1441,36 @@
       return state.items[key];
     }
 
-    function saveLocal() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (e) {}
-    }
-
-    function loadLocal() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          state = Object.assign(state, parsed);
-        }
-      } catch (e) {}
-    }
-
     function renderBlocks() {
-      const container = document.getElementById("blocksContainer");
-      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      const container = document.getElementById("checklistContainer");
+      const search = (document.getElementById("searchInput").value || "").trim().toLowerCase();
       const filter = document.getElementById("statusFilter").value;
       container.innerHTML = "";
 
       CHECKLIST_DATA.forEach((block, bIdx) => {
-        let blockVisibleItems = 0;
         const blockEl = document.createElement("section");
         blockEl.className = "bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm print-block-section";
 
+        let blockVisibleItems = 0;
         let subHtml = "";
+
         block.subsections.forEach((sub, sIdx) => {
           let rowsHtml = "";
+
           sub.items.forEach((itemText, iIdx) => {
             const key = makeItemKey(bIdx, sIdx, iIdx);
             const it = ensureItemState(key);
 
-            const hasEval = it.months.some(m => m !== "");
-            const hasFinding = it.months.some(m => m === "PREV" || m === "CORR");
-
-            if (query && !itemText.toLowerCase().includes(query) && !sub.name.toLowerCase().includes(query) && !block.title.toLowerCase().includes(query)) {
+            if (search && !itemText.toLowerCase().includes(search) && !sub.name.toLowerCase().includes(search) && !block.title.toLowerCase().includes(search)) {
               return;
             }
-            if (filter === "findings" && !hasFinding) return;
-            if (filter === "evaluated" && !hasEval) return;
-            if (filter === "pending" && hasEval) return;
+
+            const activeMonths = it.months.filter(x => x !== "");
+            const lastState = activeMonths.length ? activeMonths[activeMonths.length - 1] : "";
+            if (filter === "OK" && lastState !== "OK") return;
+            if (filter === "PREV" && lastState !== "PREV") return;
+            if (filter === "CORR" && lastState !== "CORR") return;
+            if (filter === "PENDING" && activeMonths.length > 0) return;
 
             blockVisibleItems++;
 
@@ -789,12 +1543,16 @@
         });
 
         if (blockVisibleItems > 0) {
+          const blockPhotoHtml = renderPhotoEvidenceSlot(block.id, block.title);
           blockEl.innerHTML = `
             <div class="block-header bg-navy-900 text-white px-5 py-3 flex items-center justify-between">
               <h2 class="font-display text-lg sm:text-xl font-extrabold uppercase tracking-wide text-amber-400">
                 ${block.title}
               </h2>
               <span class="text-xs text-slate-300 font-semibold">${blockVisibleItems} puntos</span>
+            </div>
+            <div class="p-3 bg-white border-b border-slate-200">
+              ${blockPhotoHtml}
             </div>
             ${subHtml}
           `;
@@ -1042,7 +1800,7 @@
       state.items[k1].max = "12.0 mm";
       state.items[k1].min = "8.5 mm";
 
-      const k2 = makeItemKey(3, 6, 4);
+      const k2 = makeItemKey(3, 4, 5);
       state.items[k2].months[mIdx] = "OK";
       state.items[k2].action = "Lubricado y sin hilos rotos";
       state.items[k2].orig = "16.0 mm";
@@ -1055,12 +1813,13 @@
 
       syncMetaToInputs();
       saveLocal();
+      renderFichaPhotoSlot();
       renderBlocks();
       renderParts();
     }
 
     function clearAllData() {
-      if (!confirm("¿Seguro que deseas limpiar todos los campos y marcas del Check List?")) return;
+      if (!confirm("¿Seguro que deseas limpiar todos los campos, fotos y marcas del Check List?")) return;
       localStorage.removeItem(STORAGE_KEY);
       location.reload();
     }
@@ -1128,6 +1887,7 @@
         items: evaluatedItems,
         parts: state.parts.filter(p => p.desc && p.desc.trim() !== ""),
         generalNotes: state.generalNotes,
+        photos: state.photos || {},
         techSignature: isCanvasBlank(techCanvas) ? "" : techCanvas.toDataURL("image/png"),
         clientSignature: isCanvasBlank(clientCanvas) ? "" : clientCanvas.toDataURL("image/png")
       };
@@ -1172,7 +1932,6 @@
         .replace(/"/g, "&quot;");
     }
 
-
     function prepareForPrint() {
       document.querySelectorAll('input[type="date"]').forEach(el => {
         if (!el.value) el.classList.add('print-date-empty');
@@ -1211,6 +1970,7 @@
     document.getElementById("searchInput").addEventListener("input", renderBlocks);
     document.getElementById("statusFilter").addEventListener("change", renderBlocks);
 
+    renderFichaPhotoSlot();
     renderBlocks();
     renderParts();
     initSignaturePad("techPad");
