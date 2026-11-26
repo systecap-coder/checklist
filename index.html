@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>SANT CRANES | Check List Mantenimiento Preventivo FRC001</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              950: '#060F1D',
+              900: '#0B1B32',
+              800: '#13294B',
+              700: '#1D3B6B'
+            },
+            amber: {
+              400: '#FACC15',
+              500: '#EAB308',
+              600: '#CA8A04'
+            }
+          },
+          fontFamily: {
+            display: ['"Barlow Condensed"', 'sans-serif'],
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .hazard-stripe {
+      background: repeating-linear-gradient(
+        -45deg,
+        #EAB308,
+        #EAB308 10px,
+        #0B1B32 10px,
+        #0B1B32 20px
+      );
+    }
+    .month-cell {
+      min-width: 34px;
+      height: 30px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.08s ease;
+    }
+    .month-cell:active { transform: scale(0.92); }
+    .st-empty { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+    .st-ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .st-prev { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+    .st-corr { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .st-na { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #ffffff !important; font-size: 10px !important; }
+      .print-break { page-break-inside: avoid; }
+      input, select, textarea { border: none !important; background: transparent !important; padding: 1px !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased pb-16">
+
+  <!-- ENCABEZADO OPERATIVO SANT CRANES -->
+  <header class="bg-navy-900 text-white shadow-lg sticky top-0 z-40">
+    <div class="h-1.5 w-full hazard-stripe"></div>
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <svg class="w-11 h-11 shrink-0" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="2" y="2" width="60" height="60" rx="12" fill="#13294B" stroke="#EAB308" stroke-width="2.5"/>
+          <path d="M10 18H54V24H10V18Z" fill="#EAB308"/>
+          <rect x="24" y="15" width="16" height="11" rx="2" fill="#F8FAFC"/>
+          <line x1="29" y1="26" x2="29" y2="38" stroke="#EAB308" stroke-width="2.2"/>
+          <line x1="35" y1="26" x2="35" y2="38" stroke="#EAB308" stroke-width="2.2"/>
+          <rect x="26" y="37" width="12" height="6" rx="1.5" fill="#F8FAFC"/>
+          <path d="M32 43V46C35.5 46 37.5 48.5 37.5 51.2C37.5 54.2 35 56.5 32 56.5C29.2 56.5 27.2 54.7 26.8 52.3" stroke="#EAB308" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <span class="font-display text-2xl font-extrabold tracking-wider">SANT <span class="text-amber-500">CRANES</span></span>
+            <span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-bold px-2.5 py-0.5 rounded uppercase">
+              Formato FRC001 • Mantenimiento Preventivo
+            </span>
+          </div>
+          <p class="text-xs text-slate-300">Guadalupe, N.L. • Tel: +52 81 2874 7775 • WhatsApp: +52 81 1229 7333</p>
+        </div>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div class="no-print flex flex-wrap items-center gap-2">
+        <button type="button" onclick="loadSampleData()" class="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-lg border border-white/15 transition">
+          Cargar Ejemplo
+        </button>
+        <button type="button" onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
+          Excel (CSV)
+        </button>
+        <button type="button" onclick="exportJSON()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
+          Respaldo JSON
+        </button>
+        <button type="button" onclick="window.print()" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
+          Imprimir / PDF
+        </button>
+        <button type="button" onclick="clearAllData()" class="bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
+          Limpiar
+        </button>
+        <button type="button" id="sendCloudBtn" onclick="submitChecklistToCloud()" class="bg-amber-500 hover:bg-amber-400 text-navy-950 text-xs font-extrabold px-4 py-2 rounded-lg shadow transition">
+          Guardar en Drive / Sheets
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1440px] mx-auto px-4 sm:px-6 pt-6 space-y-6">
+
+    <!-- ALERTA DE ESTADO DE ENVÍO -->
+    <div id="cloudStatus" class="hidden rounded-xl p-4 text-sm font-medium shadow-sm"></div>
+
+    <!-- 1. FICHA TÉCNICA DEL EQUIPO -->
+    <section class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm print-break">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
+        <h1 class="font-display text-xl sm:text-2xl font-extrabold text-navy-900 uppercase">
+          Ficha Técnica del Equipo y Orden de Servicio
+        </h1>
+        <span id="autosaveBadge" class="no-print text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full font-medium">
+          Autoguardado local activo
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3.5 text-xs">
+        <div class="lg:col-span-2">
+          <label class="block font-bold text-slate-600 uppercase mb-1">Cliente / Planta *</label>
+          <input type="text" data-meta="cliente" placeholder="Ej. Metalsa / ArcelorMittal" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div class="lg:col-span-2">
+          <label class="block font-bold text-slate-600 uppercase mb-1">Proyecto</label>
+          <input type="text" data-meta="proyecto" placeholder="Ej. Mantenimiento Preventivo Anual" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">No. de Pedido</label>
+          <input type="text" data-meta="pedido" placeholder="OC-0000" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">Periodo</label>
+          <input type="text" data-meta="periodo" value="2026 - 2027" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">Grúa No. de Serie *</label>
+          <input type="text" data-meta="serie" placeholder="S/N" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">No. de Máquina</label>
+          <input type="text" data-meta="maquina" placeholder="GV-01" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">Área / Nave</label>
+          <input type="text" data-meta="area" placeholder="Nave Principal / Fundición" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">Capacidad (Ton)</label>
+          <input type="text" data-meta="capacidad" placeholder="20 / 7.5 Ton" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">Tipo de Equipo</label>
+          <select data-meta="tipo" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:border-navy-900 focus:outline-none">
+            <option value="Grúa Viajera Birriel">Grúa Viajera Birriel</option>
+            <option value="Grúa Viajera Monorriel">Grúa Viajera Monorriel</option>
+            <option value="Polipasto Estacionario / Monorriel">Polipasto Estacionario / Monorriel</option>
+            <option value="Grúa Semi-Pórtico / Pórtico">Grúa Semi-Pórtico / Pórtico</option>
+            <option value="Grúa Bandera">Grúa Bandera</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">Dispositivo Bajo Gancho</label>
+          <input type="text" data-meta="dispositivo" placeholder="Gancho / Electroimán / Balancín" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+        </div>
+
+        <div class="lg:col-span-2">
+          <label class="block font-bold text-slate-600 uppercase mb-1">Técnico Responsable SANT CRANES *</label>
+          <input type="text" data-meta="tecnico" placeholder="Nombre del técnico asignado" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">Fecha de Entrega</label>
+          <input type="date" data-meta="fechaEntrega" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 uppercase mb-1">Fecha de Mantenimiento *</label>
+          <input type="date" data-meta="fechaMtto" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-navy-900 focus:outline-none" />
+        </div>
+        <div class="lg:col-span-2">
+          <label class="block font-bold text-slate-600 uppercase mb-1">Estatus del Servicio</label>
+          <select data-meta="estatus" class="meta-field w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold bg-white focus:border-navy-900 focus:outline-none">
+            <option value="Operativa - Mantenimiento Completado">Operativa - Mantenimiento Completado</option>
+            <option value="Operativa con Observaciones Preventivas">Operativa con Observaciones Preventivas</option>
+            <option value="Requiere Refacciones / Seguimiento">Requiere Refacciones / Seguimiento</option>
+            <option value="Fuera de Servicio por Seguridad">Fuera de Servicio por Seguridad</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. PANEL KPI Y BARRA DE HERRAMIENTAS DE INSPECCIÓN -->
+    <section class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div class="text-[11px] font-bold uppercase text-slate-500">Total Puntos</div>
+          <div id="kpiTotal" class="font-display text-2xl font-extrabold text-navy-900">221</div>
+        </div>
+        <div class="bg-sky-50 border border-sky-200 rounded-xl p-3">
+          <div class="text-[11px] font-bold uppercase text-sky-700">Evaluados</div>
+          <div id="kpiEvaluated" class="font-display text-2xl font-extrabold text-sky-900">0 (0%)</div>
+        </div>
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+          <div class="text-[11px] font-bold uppercase text-emerald-700">✓ OK (Conformes)</div>
+          <div id="kpiOk" class="font-display text-2xl font-extrabold text-emerald-800">0</div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
+          <div class="text-[11px] font-bold uppercase text-amber-700">⚠ Prev. / Obs.</div>
+          <div id="kpiPrev" class="font-display text-2xl font-extrabold text-amber-800">0</div>
+        </div>
+        <div class="bg-rose-50 border border-rose-200 rounded-xl p-3">
+          <div class="text-[11px] font-bold uppercase text-rose-700">✕ Corr. / Falla</div>
+          <div id="kpiCorr" class="font-display text-2xl font-extrabold text-rose-800">0</div>
+        </div>
+        <div class="bg-slate-100 border border-slate-300 rounded-xl p-3">
+          <div class="text-[11px] font-bold uppercase text-slate-600">N/A (No Aplica)</div>
+          <div id="kpiNa" class="font-display text-2xl font-extrabold text-slate-700">0</div>
+        </div>
+      </div>
+
+      <!-- CONTROLES DE FILTRO Y MES ACTIVO -->
+      <div class="no-print flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200">
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-xs font-bold uppercase text-slate-600">Mes activo para llenado rápido:</label>
+          <select id="activeMonthSelect" class="rounded-lg border border-slate-300 bg-amber-50 font-bold text-navy-900 px-3 py-1.5 text-xs">
+            <option value="0">Enero (Ene)</option>
+            <option value="1">Febrero (Feb)</option>
+            <option value="2">Marzo (Mzo)</option>
+            <option value="3">Abril (Abr)</option>
+            <option value="4">Mayo (May)</option>
+            <option value="5">Junio (Jun)</option>
+            <option value="6">Julio (Jul)</option>
+            <option value="7">Agosto (Ago)</option>
+            <option value="8">Septiembre (Sep)</option>
+            <option value="9">Octubre (Oct)</option>
+            <option value="10">Noviembre (Nov)</option>
+            <option value="11">Diciembre (Dic)</option>
+          </select>
+          <span class="text-[11px] text-slate-500">Haz clic en cualquier celda de mes para alternar: <strong>— → ✓ → ⚠ → ✕ → N/A</strong></span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <input type="text" id="searchInput" placeholder="Buscar componente o punto..." class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs w-56 focus:border-navy-900 focus:outline-none" />
+          <select id="statusFilter" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white">
+            <option value="all">Mostrar: Todos (221)</option>
+            <option value="findings">Solo Hallazgos (⚠ y ✕)</option>
+            <option value="evaluated">Solo Evaluados</option>
+            <option value="pending">Solo Pendientes</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. BLOQUES DE INSPECCIÓN (221 PUNTOS EXACTOS) -->
+    <div id="blocksContainer" class="space-y-6"></div>
+
+    <!-- 4. REFACCIONES REQUERIDAS -->
+    <section class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm print-break">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3 mb-4">
+        <div>
+          <h2 class="font-display text-xl font-extrabold text-navy-900 uppercase">
+            Refacciones y Materiales Requeridos
+          </h2>
+          <p class="text-xs text-slate-500">Registra los componentes detectados durante la inspección para cotización o reemplazo.</p>
+        </div>
+        <button type="button" onclick="addPartRow()" class="no-print bg-navy-900 hover:bg-navy-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition">
+          + Agregar Refacción
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs border-collapse">
+          <thead>
+            <tr class="bg-navy-900 text-white uppercase">
+              <th class="p-2.5 text-left w-20">Cant.</th>
+              <th class="p-2.5 text-left w-24">Unidad</th>
+              <th class="p-2.5 text-left">Descripción de la Refacción / Componente</th>
+              <th class="p-2.5 text-left w-48">Marca / No. de Parte</th>
+              <th class="p-2.5 text-left w-44">Prioridad</th>
+              <th class="no-print p-2.5 text-center w-14">Quitar</th>
+            </tr>
+          </thead>
+          <tbody id="partsBody" class="divide-y divide-slate-200"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. OBSERVACIONES GENERALES Y FIRMAS DIGITALES -->
+    <section class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-6 print-break">
+      <div>
+        <label class="block font-display text-lg font-extrabold text-navy-900 uppercase mb-2">
+          Observaciones Generales / Recomendaciones Técnicas
+        </label>
+        <textarea id="generalNotes" rows="3" placeholder="Anota conclusiones generales, condiciones de seguridad encontradas o recomendaciones de operación..." class="w-full rounded-xl border border-slate-300 p-3 text-sm focus:border-navy-900 focus:outline-none"></textarea>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 pt-2">
+        <!-- Firma Técnico -->
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase text-navy-900">Firma del Técnico SANT CRANES</span>
+            <button type="button" onclick="clearSignature('techPad')" class="no-print text-xs text-rose-600 hover:underline font-semibold">
+              Limpiar firma
+            </button>
+          </div>
+          <canvas id="techPad" width="460" height="140" class="w-full h-36 bg-white border border-slate-300 rounded-lg touch-none cursor-crosshair"></canvas>
+          <p class="text-[11px] text-slate-500 text-center">Técnico de Servicio Especializado — SANT CRANES</p>
+        </div>
+
+        <!-- Firma Cliente -->
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase text-navy-900">Firma de Conformidad del Cliente</span>
+            <button type="button" onclick="clearSignature('clientPad')" class="no-print text-xs text-rose-600 hover:underline font-semibold">
+              Limpiar firma
+            </button>
+          </div>
+          <canvas id="clientPad" width="460" height="140" class="w-full h-36 bg-white border border-slate-300 rounded-lg touch-none cursor-crosshair"></canvas>
+          <input type="text" data-meta="receptorCliente" placeholder="Nombre y puesto quien recibe en planta" class="meta-field w-full rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs text-center focus:border-navy-900 focus:outline-none" />
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // CONFIGURACIÓN DEL BACKEND (PEGA AQUÍ LA URL /exec DE Code_Checklist.gs)
+    // =========================================================================
+    const APPS_SCRIPT_URL = "";
+
+    const MONTHS = ["Ene", "Feb", "Mzo", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    const STATUS_CYCLE = ["", "OK", "PREV", "CORR", "NA"];
+    const STATUS_LABELS = {
+      "": { symbol: "—", cls: "st-empty" },
+      "OK": { symbol: "✓", cls: "st-ok" },
+      "PREV": { symbol: "⚠", cls: "st-prev" },
+      "CORR": { symbol: "✕", cls: "st-corr" },
+      "NA": { symbol: "N/A", cls: "st-na" }
+    };
+
+    const CHECKLIST_DATA = [{"id": "puente", "title": "1. Movimiento: Puente", "subsections": [{"name": "Motores", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Lubricar Rodamientos.", "Inspección visual de carcasa y ventilador.", "Revisar temperatura de operación.", "Apriete de tornillería de fijación."]}, {"name": "Frenos", "items": ["Apriete de Conexiones.", "Ajuste de GAP. (Entre Hierro)", "Revisar Disco de Fricción.", "Revisar bobina de freno y rectificador.", "Prueba de frenado sin deslizamiento."]}, {"name": "Cabezales", "items": ["Apriete de Tornilos Puente-Cabezal.", "Apriete de Tornillos de Capsulas.", "Apriete de Tornillos Topes del Puente", "Inspección de desgaste en cejas de ruedas.", "Lubricación de baleros de ruedas.", "Revisión de gomas amortiguador (topes).", "Revisión de daños por grietas en estructura."]}, {"name": "Reductor", "items": ["Revisar Soldadura de Base.", "Apriete de Tornillo Base.", "Revisión de Amortiguador.", "Nivel y estado de aceite lubricante.", "Revisión de fugas por retenes y empaques.", "Limpieza de respiradero.", "Ruido o vibración anormal en operación.", "Temperatura de carcasa en operación.", "Estado de tapón de drenado y nivel."]}, {"name": "Acoplamiento del reductor", "items": ["Revisión de Cuñero Flecha Hueca", "Revisión de Cuña.", "Revisión de Seguro Truack", "Alineación y apriete de opresores."]}, {"name": "Puente (Estructural)", "items": ["Limpieza de Plataformas.", "Sistema Mens. Carretillas y Viga", "Revisión de Riel.", "Inspección de soldaduras principales de trabe.", "Estado de pasillos, barandales y rodapiés.", "Revisión de pernos de unión de trabe.", "Estado de pintura y corrosión estructural."]}]}, {"id": "carro", "title": "2. Movimiento: Carro", "subsections": [{"name": "Motores", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Revisar Rodamientos (Ruidos)", "Inspección de ventilador y cubierta.", "Apriete de base de motor."]}, {"name": "Frenos", "items": ["Apriete de Conexiones.", "Ajuste de GAP. (Entre Hierro)", "Revisar Disco de Fricción.", "Revisar bobina y rectificador.", "Prueba de retención de freno."]}, {"name": "Cabezales", "items": ["Apriete de Tornillos de Capsulas.", "Revisión de gomas amortiguador.", "Revision de Daños por Grietas", "Desgaste de pestañas y banda de rodadura.", "Lubricación de rodamientos de rueda.", "Apriete de topes de carro."]}, {"name": "Reductor", "items": ["Revisar Soldadura de Base.", "Apriete de Tornillo Base.", "Revisión de Amortiguador.", "Nivel y calidad de aceite.", "Revisión de retenes (sin fugas).", "Limpieza de válvula respiradero.", "Revisión de ruidos anormales.", "Temperatura de trabajo.", "Apriete de tornillería de carcasa."]}, {"name": "Acoplamiento del reductor", "items": ["Revisión de Cuñero Flecha Hueca", "Revisión de Cuña.", "Revisión de Seguro Truack", "Revisión de juego axial/radial."]}, {"name": "Estructura del carro", "items": ["Revisar uniones (soldaduras)."]}]}, {"id": "carro_b", "title": "3. Movimiento: Carro B", "subsections": [{"name": "Motores", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Revisar Rodamientos (Ruidos)", "Inspección de ventilador y cubierta.", "Apriete de base de motor."]}, {"name": "Frenos", "items": ["Apriete de Conexiones.", "Ajuste de GAP. (Entre Hierro)", "Revisar Disco de Fricción.", "Revisar bobina y rectificador.", "Prueba de retención de freno."]}, {"name": "Cabezales", "items": ["Apriete de Tornillos de Capsulas.", "Revisión de gomas amortiguador.", "Revision de Daños por Grietas", "Desgaste de pestañas y banda de rodadura.", "Lubricación de rodamientos de rueda.", "Apriete de topes de carro B."]}]}, {"id": "gancho_ppl", "title": "4. Movimiento: Gancho PPL", "subsections": [{"name": "Aparejo Inferior.", "items": ["Rodamientos de poleas.", "Rodamiento Axial.", "Lubricación.", "Inspección de garganta de poleas.", "Estado de guardacables.", "Apertura de garganta de gancho (deformación).", "Seguro (pestillo) de seguridad de gancho.", "Giro libre del gancho sobre su eje.", "Inspección de fisuras en cuello y cuerpo de gancho.", "Apriete de tuerca y seguro de gancho."]}, {"name": "Aparejo Superior.", "items": ["Rodamientos de poleas.", "Lubricación.", "Poleas.", "Perno eje y seguros de poleas superiores."]}, {"name": "Motor", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Lubricar Rodamientos.", "Medición de aislamiento de devanados.", "Estado de ventilador y tolva.", "Sensor térmico (termistor/klixon).", "Apriete de tornillería de montaje."]}, {"name": "Freno", "items": ["Apriete de Conexiones de bobina", "Reviar nivel de aceite hidraulico", "Cambio de Aceite.", "Ajuste de carrera y desgaste de balatas/discos."]}, {"name": "Tambor", "items": ["Rodamiento pedestal", "Cople.", "Soldadura de uniones.", "Estado de ranuras del tambor.", "Guía de cable (arnés/anillo guía).", "Grampas y tornillos de fijación de punta de cable."]}, {"name": "Reductor", "items": ["Revisar Soldadura de Base.", "Apriete de Tornillo Base.", "Estado de Engranes.", "Nivel de aceite lubricante.", "Cambio / análisis de aceite.", "Revisión de retenes y sellos.", "Limpieza de respiradero.", "Revisión de rodamientos internos (ruido/juego).", "Temperatura de operación.", "Apriete de tapas de inspección.", "Estado de cople de alta velocidad."]}, {"name": "Gancho", "items": ["Fusibles Fuerza Inversor.", "Circuito de Protección de Control.", "Contactores y Relevadores.", "Resistencias de frenado dinámico.", "Cable de acero (alambres rotos, cocas, corrosión).", "Lubricación de cable de acero.", "Punto muerto / anclaje fijo del cable.", "Celda de carga / limitador de sobrecarga.", "Borneras de control de polipasto.", "Prueba de izaje y descenso en vacío."]}, {"name": "Interruptores de Limite", "items": ["Interruptor Engranado Gancho.", "Interruptor Limite Peso Gancho."]}]}, {"id": "gancho_aux", "title": "5. Movimiento: Gancho Aux.", "subsections": [{"name": "Aparejo Inferior.", "items": ["Rodamientos de poleas.", "Rodamiento Axial.", "Lubricación.", "Inspección de garganta de poleas.", "Estado de guardacables.", "Apertura de garganta de gancho (deformación).", "Seguro (pestillo) de seguridad de gancho.", "Giro libre del gancho sobre su eje.", "Inspección de fisuras en cuello y cuerpo de gancho.", "Apriete de tuerca y seguro de gancho."]}, {"name": "Aparejo Superior.", "items": ["Rodamientos de poleas.", "Lubricación.", "Poleas.", "Perno eje y seguros de poleas superiores."]}, {"name": "Motor", "items": ["Apriete de conexiones.", "Revisar Corrientes", "Lubricar Rodamientos.", "Medición de aislamiento de devanados.", "Estado de ventilador y tolva.", "Sensor térmico (termistor/klixon).", "Apriete de tornillería de montaje."]}, {"name": "Freno", "items": ["Apriete de Conexiones de bobina", "Reviar nivel de aceite hidraulico", "Cambio de Aceite.", "Ajuste de carrera y desgaste de balatas/discos."]}, {"name": "Tambor", "items": ["Rodamiento pedestal", "Cople.", "Soldadura de uniones.", "Estado de ranuras del tambor.", "Guía de cable (arnés/anillo guía).", "Grampas y tornillos de fijación de punta de cable."]}, {"name": "Reductor", "items": ["Revisar Soldadura de Base.", "Apriete de Tornillo Base.", "Estado de Engranes.", "Nivel de aceite lubricante.", "Cambio / análisis de aceite.", "Revisión de retenes y sellos.", "Limpieza de respiradero.", "Revisión de rodamientos internos (ruido/juego).", "Temperatura de operación.", "Apriete de tapas de inspección.", "Estado de cople de alta velocidad."]}, {"name": "Gancho", "items": ["Fusibles Fuerza Inversor.", "Circuito de Protección de Control.", "Contactores y Relevadores.", "Resistencias de frenado dinámico.", "Cable de acero (alambres rotos, cocas, corrosión).", "Lubricación de cable de acero.", "Punto muerto / anclaje fijo del cable.", "Celda de carga / limitador de sobrecarga.", "Borneras de control de polipasto.", "Prueba de izaje y descenso en vacío."]}, {"name": "Interruptores de Limite", "items": ["Interruptor limite de puente.", "Interruptor Engranado Gancho.", "Interruptor Limite Peso Gancho.", "Sistema anticolisión (sensor óptico/láser)."]}, {"name": "Radio Control", "items": ["Tablero de interconexion (conexiones)", "Display magnetos (conexiones)", "Master gancho.", "Joysticks y selectores de transmisor.", "Botón de paro de emergencia (seta).", "Estado de baterías y cargador.", "Prueba de alcance y respuesta de comandos."]}]}, {"id": "electrico", "title": "6. Eléctrico Control y Fuerza", "subsections": [{"name": "Puente", "items": ["Fusibles Protección Principal.", "Fusibles Fuerza Inversor.", "Circuito de Protección de Control.", "Contactores principales y auxiliares.", "Transformador de control (voltajes).", "Limpieza y apriete de clemas en tablero.", "Sistema de alimentación principal (blindobarra / colectores)."]}, {"name": "Inversor.", "items": ["Secuencia.", "Programación.", "Lineas de Fuerza (Apretar)", "Ventiladores internos de enfriamiento.", "Historial de fallas y alarmas."]}, {"name": "Carro", "items": ["Fusibles Fuerza Inversor.", "Circuito de Protección de Control.", "Contactores y Relevadores.", "Cable plano festoon y carretillas portacables.", "Cajas de conexiones en carro.", "Alumbrado de nave / torreta y sirena de advertencia.", "Puesta a tierra de estructura y tableros.", "Paro de emergencia general."]}]}];
+    const STORAGE_KEY = "sant_cranes_frc001_v2";
+
+    let state = {
+      meta: {
+        cliente: "",
+        proyecto: "",
+        pedido: "",
+        periodo: "2026 - 2027",
+        serie: "",
+        maquina: "",
+        area: "",
+        capacidad: "",
+        tipo: "Grúa Viajera Birriel",
+        dispositivo: "",
+        tecnico: "",
+        fechaEntrega: "",
+        fechaMtto: new Date().toISOString().slice(0, 10),
+        estatus: "Operativa - Mantenimiento Completado",
+        receptorCliente: ""
+      },
+      items: {},
+      parts: [
+        { qty: "", unit: "Pza", desc: "", partNo: "", priority: "Media - Programar" }
+      ],
+      generalNotes: ""
+    };
+
+    function makeItemKey(bIdx, sIdx, iIdx) {
+      return `${bIdx}_${sIdx}_${iIdx}`;
+    }
+
+    function ensureItemState(key) {
+      if (!state.items[key]) {
+        state.items[key] = {
+          freq: "Mensual",
+          months: Array(12).fill(""),
+          action: "",
+          orig: "",
+          max: "",
+          min: ""
+        };
+      }
+      return state.items[key];
+    }
+
+    function saveLocal() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function loadLocal() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          state = Object.assign(state, parsed);
+        }
+      } catch (e) {}
+    }
+
+    function renderBlocks() {
+      const container = document.getElementById("blocksContainer");
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      const filter = document.getElementById("statusFilter").value;
+      container.innerHTML = "";
+
+      CHECKLIST_DATA.forEach((block, bIdx) => {
+        let blockVisibleItems = 0;
+        const blockEl = document.createElement("section");
+        blockEl.className = "bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm print-break";
+
+        let subHtml = "";
+        block.subsections.forEach((sub, sIdx) => {
+          let rowsHtml = "";
+          sub.items.forEach((itemText, iIdx) => {
+            const key = makeItemKey(bIdx, sIdx, iIdx);
+            const it = ensureItemState(key);
+
+            const hasEval = it.months.some(m => m !== "");
+            const hasFinding = it.months.some(m => m === "PREV" || m === "CORR");
+
+            if (query && !itemText.toLowerCase().includes(query) && !sub.name.toLowerCase().includes(query) && !block.title.toLowerCase().includes(query)) {
+              return;
+            }
+            if (filter === "findings" && !hasFinding) return;
+            if (filter === "evaluated" && !hasEval) return;
+            if (filter === "pending" && hasEval) return;
+
+            blockVisibleItems++;
+
+            const monthCells = MONTHS.map((mName, mIdx) => {
+              const val = it.months[mIdx] || "";
+              const info = STATUS_LABELS[val] || STATUS_LABELS[""];
+              return `<td class="p-0.5 text-center">
+                <button type="button" onclick="cycleMonth('${key}', ${mIdx})" id="cell_${key}_${mIdx}" class="month-cell rounded ${info.cls}" title="${mName}: Clic para cambiar estado">
+                  ${info.symbol}
+                </button>
+              </td>`;
+            }).join("");
+
+            rowsHtml += `
+              <tr class="hover:bg-slate-50/90 border-b border-slate-100">
+                <td class="p-2.5 text-slate-800 font-medium min-w-[230px]">${itemText}</td>
+                <td class="p-1.5">
+                  <select onchange="updateItemField('${key}', 'freq', this.value)" class="rounded border border-slate-200 bg-white px-1.5 py-1 text-[11px]">
+                    <option value="Mensual" ${it.freq === "Mensual" ? "selected" : ""}>Mensual</option>
+                    <option value="Trimestral" ${it.freq === "Trimestral" ? "selected" : ""}>Trimestral</option>
+                    <option value="Semestral" ${it.freq === "Semestral" ? "selected" : ""}>Semestral</option>
+                    <option value="Anual" ${it.freq === "Anual" ? "selected" : ""}>Anual</option>
+                  </select>
+                </td>
+                ${monthCells}
+                <td class="p-1.5 min-w-[180px]">
+                  <input type="text" value="${escapeHtml(it.action)}" oninput="updateItemField('${key}', 'action', this.value)" placeholder="Observación / acción..." class="w-full rounded border border-slate-200 px-2 py-1 text-[11px] focus:border-navy-900 focus:outline-none" />
+                </td>
+                <td class="p-1 w-16">
+                  <input type="text" value="${escapeHtml(it.orig)}" oninput="updateItemField('${key}', 'orig', this.value)" placeholder="Orig." class="w-full rounded border border-slate-200 px-1.5 py-1 text-[11px] text-center" />
+                </td>
+                <td class="p-1 w-16">
+                  <input type="text" value="${escapeHtml(it.max)}" oninput="updateItemField('${key}', 'max', this.value)" placeholder="Max" class="w-full rounded border border-slate-200 px-1.5 py-1 text-[11px] text-center" />
+                </td>
+                <td class="p-1 w-16">
+                  <input type="text" value="${escapeHtml(it.min)}" oninput="updateItemField('${key}', 'min', this.value)" placeholder="Min" class="w-full rounded border border-slate-200 px-1.5 py-1 text-[11px] text-center" />
+                </td>
+              </tr>
+            `;
+          });
+
+          if (rowsHtml) {
+            subHtml += `
+              <div class="border-t border-slate-200">
+                <div class="bg-slate-100 px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+                  <span class="font-bold text-xs uppercase tracking-wider text-navy-900">${sub.name}</span>
+                  <button type="button" onclick="markSubsectionOk(${bIdx}, ${sIdx})" class="no-print text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded transition">
+                    Marcar subsección ✓ OK (Mes activo)
+                  </button>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-xs border-collapse">
+                    <thead>
+                      <tr class="bg-slate-50 text-slate-500 text-[10px] uppercase border-b border-slate-200">
+                        <th class="p-2 text-left">Punto de Inspección</th>
+                        <th class="p-2 text-left">Frec.</th>
+                        ${MONTHS.map(m => `<th class="p-1 text-center">${m}</th>`).join("")}
+                        <th class="p-2 text-left">Acción Preventiva / Correctiva</th>
+                        <th class="p-1 text-center">Orig.</th>
+                        <th class="p-1 text-center">Max</th>
+                        <th class="p-1 text-center">Min</th>
+                      </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+          }
+        });
+
+        if (blockVisibleItems > 0) {
+          blockEl.innerHTML = `
+            <div class="bg-navy-900 text-white px-5 py-3 flex items-center justify-between">
+              <h2 class="font-display text-lg sm:text-xl font-extrabold uppercase tracking-wide text-amber-400">
+                ${block.title}
+              </h2>
+              <span class="text-xs text-slate-300 font-semibold">${blockVisibleItems} puntos</span>
+            </div>
+            ${subHtml}
+          `;
+          container.appendChild(blockEl);
+        }
+      });
+
+      updateKPIs();
+    }
+
+    function cycleMonth(key, mIdx) {
+      const it = ensureItemState(key);
+      const curr = it.months[mIdx] || "";
+      const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(curr) + 1) % STATUS_CYCLE.length];
+      it.months[mIdx] = next;
+
+      const btn = document.getElementById(`cell_${key}_${mIdx}`);
+      if (btn) {
+        const info = STATUS_LABELS[next];
+        btn.className = `month-cell rounded ${info.cls}`;
+        btn.textContent = info.symbol;
+      }
+      saveLocal();
+      updateKPIs();
+    }
+
+    function markSubsectionOk(bIdx, sIdx) {
+      const mIdx = parseInt(document.getElementById("activeMonthSelect").value, 10) || 0;
+      const sub = CHECKLIST_DATA[bIdx].subsections[sIdx];
+      sub.items.forEach((_, iIdx) => {
+        const key = makeItemKey(bIdx, sIdx, iIdx);
+        const it = ensureItemState(key);
+        it.months[mIdx] = "OK";
+      });
+      saveLocal();
+      renderBlocks();
+    }
+
+    function updateItemField(key, field, value) {
+      const it = ensureItemState(key);
+      it[field] = value;
+      saveLocal();
+    }
+
+    function updateKPIs() {
+      let total = 0, evaluated = 0, ok = 0, prev = 0, corr = 0, na = 0;
+      CHECKLIST_DATA.forEach((b, bIdx) => {
+        b.subsections.forEach((s, sIdx) => {
+          s.items.forEach((_, iIdx) => {
+            total++;
+            const it = ensureItemState(makeItemKey(bIdx, sIdx, iIdx));
+            const active = it.months.filter(x => x !== "");
+            if (active.length > 0) {
+              evaluated++;
+              const last = active[active.length - 1];
+              if (last === "OK") ok++;
+              else if (last === "PREV") prev++;
+              else if (last === "CORR") corr++;
+              else if (last === "NA") na++;
+            }
+          });
+        });
+      });
+      const pct = total ? Math.round((evaluated / total) * 100) : 0;
+      document.getElementById("kpiTotal").textContent = total;
+      document.getElementById("kpiEvaluated").textContent = `${evaluated} (${pct}%)`;
+      document.getElementById("kpiOk").textContent = ok;
+      document.getElementById("kpiPrev").textContent = prev;
+      document.getElementById("kpiCorr").textContent = corr;
+      document.getElementById("kpiNa").textContent = na;
+    }
+
+    function renderParts() {
+      const tbody = document.getElementById("partsBody");
+      tbody.innerHTML = "";
+      state.parts.forEach((p, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="p-1.5"><input type="text" value="${escapeHtml(p.qty)}" oninput="updatePart(${idx}, 'qty', this.value)" placeholder="1" class="w-full rounded border border-slate-300 px-2 py-1.5" /></td>
+          <td class="p-1.5"><input type="text" value="${escapeHtml(p.unit)}" oninput="updatePart(${idx}, 'unit', this.value)" placeholder="Pza" class="w-full rounded border border-slate-300 px-2 py-1.5" /></td>
+          <td class="p-1.5"><input type="text" value="${escapeHtml(p.desc)}" oninput="updatePart(${idx}, 'desc', this.value)" placeholder="Ej. Disco de fricción freno gancho principal" class="w-full rounded border border-slate-300 px-2 py-1.5" /></td>
+          <td class="p-1.5"><input type="text" value="${escapeHtml(p.partNo)}" oninput="updatePart(${idx}, 'partNo', this.value)" placeholder="Demag / OEM" class="w-full rounded border border-slate-300 px-2 py-1.5" /></td>
+          <td class="p-1.5">
+            <select onchange="updatePart(${idx}, 'priority', this.value)" class="w-full rounded border border-slate-300 px-2 py-1.5 bg-white">
+              <option value="Alta - Paro Inminente" ${p.priority === "Alta - Paro Inminente" ? "selected" : ""}>Alta - Paro Inminente</option>
+              <option value="Media - Programar" ${p.priority === "Media - Programar" ? "selected" : ""}>Media - Programar</option>
+              <option value="Baja - Preventivo" ${p.priority === "Baja - Preventivo" ? "selected" : ""}>Baja - Preventivo</option>
+            </select>
+          </td>
+          <td class="no-print p-1.5 text-center">
+            <button type="button" onclick="removePartRow(${idx})" class="text-rose-600 hover:text-rose-800 font-bold px-2 py-1">✕</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function addPartRow() {
+      state.parts.push({ qty: "", unit: "Pza", desc: "", partNo: "", priority: "Media - Programar" });
+      saveLocal();
+      renderParts();
+    }
+
+    function removePartRow(idx) {
+      if (state.parts.length === 1) {
+        state.parts[0] = { qty: "", unit: "Pza", desc: "", partNo: "", priority: "Media - Programar" };
+      } else {
+        state.parts.splice(idx, 1);
+      }
+      saveLocal();
+      renderParts();
+    }
+
+    function updatePart(idx, field, val) {
+      state.parts[idx][field] = val;
+      saveLocal();
+    }
+
+    function initSignaturePad(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#0B1B32";
+
+      let drawing = false;
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: (clientX - rect.left) * (canvas.width / rect.width),
+          y: (clientY - rect.top) * (canvas.height / rect.height)
+        };
+      }
+
+      canvas.addEventListener("mousedown", (e) => {
+        drawing = true;
+        const p = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+      });
+      canvas.addEventListener("mousemove", (e) => {
+        if (!drawing) return;
+        const p = getPos(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+      });
+      window.addEventListener("mouseup", () => { drawing = false; });
+
+      canvas.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        drawing = true;
+        const p = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+      }, { passive: false });
+      canvas.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+        if (!drawing) return;
+        const p = getPos(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+      }, { passive: false });
+      canvas.addEventListener("touchend", () => { drawing = false; });
+    }
+
+    function clearSignature(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function isCanvasBlank(canvas) {
+      const blank = document.createElement("canvas");
+      blank.width = canvas.width;
+      blank.height = canvas.height;
+      return canvas.toDataURL() === blank.toDataURL();
+    }
+
+    function exportCSV() {
+      const rows = [["Cliente", state.meta.cliente, "Serie", state.meta.serie, "Fecha Mtto", state.meta.fechaMtto]];
+      rows.push(["Bloque", "Subsección", "Punto de Inspección", "Frecuencia", ...MONTHS, "Acción Preventiva / Correctiva", "Original", "Max", "Min"]);
+      CHECKLIST_DATA.forEach((b, bIdx) => {
+        b.subsections.forEach((s, sIdx) => {
+          s.items.forEach((itemText, iIdx) => {
+            const it = ensureItemState(makeItemKey(bIdx, sIdx, iIdx));
+            rows.push([b.title, s.name, itemText, it.freq, ...it.months, it.action, it.orig, it.max, it.min]);
+          });
+        });
+      });
+      const csv = "\uFEFF" + rows.map(r => r.map(c => `"${String(c || "").replace(/"/g, '""')}"`).join(",")).join("\n");
+      downloadBlob(csv, `CheckList_FRC001_${state.meta.serie || "SANTCRANES"}.csv`, "text/csv;charset=utf-8;");
+    }
+
+    function exportJSON() {
+      downloadBlob(JSON.stringify(state, null, 2), `Respaldo_FRC001_${state.meta.serie || "SANTCRANES"}.json`, "application/json");
+    }
+
+    function downloadBlob(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadSampleData() {
+      state.meta = {
+        cliente: "METALSA - Planta Apodaca",
+        proyecto: "Mantenimiento Preventivo Trimestral Q4",
+        pedido: "OC-45892",
+        periodo: "2026 - 2027",
+        serie: "DMG-2048-MX",
+        maquina: "GRÚA SPH-04",
+        area: "Nave Estampado Línea 2",
+        capacidad: "20 / 7.5 Ton",
+        tipo: "Grúa Viajera Birriel",
+        dispositivo: "Gancho Doble / Balancín",
+        tecnico: "Ing. Roberto Salazar",
+        fechaEntrega: new Date().toISOString().slice(0, 10),
+        fechaMtto: new Date().toISOString().slice(0, 10),
+        estatus: "Operativa con Observaciones Preventivas",
+        receptorCliente: "Ing. Luis Torres - Sup. Mantenimiento"
+      };
+      const mIdx = new Date().getMonth();
+      document.getElementById("activeMonthSelect").value = mIdx;
+
+      CHECKLIST_DATA.forEach((b, bIdx) => {
+        b.subsections.forEach((s, sIdx) => {
+          s.items.forEach((_, iIdx) => {
+            const key = makeItemKey(bIdx, sIdx, iIdx);
+            const it = ensureItemState(key);
+            it.months[mIdx] = "OK";
+          });
+        });
+      });
+
+      const k1 = makeItemKey(0, 1, 2);
+      state.items[k1].months[mIdx] = "PREV";
+      state.items[k1].action = "Desgaste al 70%, programar cambio de disco de fricción";
+      state.items[k1].orig = "12.0 mm";
+      state.items[k1].max = "12.0 mm";
+      state.items[k1].min = "8.5 mm";
+
+      const k2 = makeItemKey(3, 6, 4);
+      state.items[k2].months[mIdx] = "OK";
+      state.items[k2].action = "Lubricado y sin hilos rotos";
+      state.items[k2].orig = "16.0 mm";
+      state.items[k2].min = "15.2 mm";
+
+      state.parts = [
+        { qty: "2", unit: "Pza", desc: "Disco de fricción freno traslación puente", partNo: "Demag 874210", priority: "Media - Programar" }
+      ];
+      state.generalNotes = "Equipo operando correctamente tras lubricación general y ajuste de GAP de frenos. Se recomienda programar reemplazo preventivo de discos de fricción de puente.";
+
+      syncMetaToInputs();
+      saveLocal();
+      renderBlocks();
+      renderParts();
+    }
+
+    function clearAllData() {
+      if (!confirm("¿Seguro que deseas limpiar todos los campos y marcas del Check List?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+
+    async function submitChecklistToCloud() {
+      const btn = document.getElementById("sendCloudBtn");
+      const statusEl = document.getElementById("cloudStatus");
+
+      if (!state.meta.cliente || !state.meta.serie) {
+        alert("Por favor captura al menos el Cliente y el No. de Serie de la Grúa antes de guardar.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Guardando reporte...";
+      statusEl.className = "hidden";
+
+      const evaluatedItems = [];
+      let ok = 0, prev = 0, corr = 0, na = 0;
+
+      CHECKLIST_DATA.forEach((b, bIdx) => {
+        b.subsections.forEach((s, sIdx) => {
+          s.items.forEach((itemText, iIdx) => {
+            const it = ensureItemState(makeItemKey(bIdx, sIdx, iIdx));
+            const evalMonths = [];
+            it.months.forEach((st, mIdx) => {
+              if (st) evalMonths.push(`${MONTHS[mIdx]}:${st}`);
+            });
+            if (evalMonths.length > 0 || it.action || it.orig || it.max || it.min) {
+              const last = it.months.filter(x => x !== "").pop() || "";
+              if (last === "OK") ok++;
+              else if (last === "PREV") prev++;
+              else if (last === "CORR") corr++;
+              else if (last === "NA") na++;
+
+              evaluatedItems.push({
+                block: b.title,
+                subsection: s.name,
+                item: itemText,
+                freq: it.freq,
+                monthsSummary: evalMonths.join(", "),
+                lastStatus: last,
+                action: it.action,
+                orig: it.orig,
+                max: it.max,
+                min: it.min
+              });
+            }
+          });
+        });
+      });
+
+      const techCanvas = document.getElementById("techPad");
+      const clientCanvas = document.getElementById("clientPad");
+
+      const payload = {
+        meta: state.meta,
+        summary: {
+          totalEvaluated: evaluatedItems.length,
+          ok: ok,
+          prev: prev,
+          corr: corr,
+          na: na
+        },
+        items: evaluatedItems,
+        parts: state.parts.filter(p => p.desc && p.desc.trim() !== ""),
+        generalNotes: state.generalNotes,
+        techSignature: isCanvasBlank(techCanvas) ? "" : techCanvas.toDataURL("image/png"),
+        clientSignature: isCanvasBlank(clientCanvas) ? "" : clientCanvas.toDataURL("image/png")
+      };
+
+      try {
+        if (!APPS_SCRIPT_URL) {
+          throw new Error("NO_URL");
+        }
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        statusEl.className = "rounded-xl p-4 text-sm font-medium bg-emerald-50 border border-emerald-300 text-emerald-900";
+        statusEl.textContent = "¡Reporte FRC001 guardado exitosamente en Google Sheets / Google Drive y enviado por correo!";
+      } catch (err) {
+        statusEl.className = "rounded-xl p-4 text-sm font-medium bg-amber-50 border border-amber-300 text-amber-900";
+        statusEl.innerHTML = err.message === "NO_URL"
+          ? 'Falta pegar la URL de Google Apps Script en <code>APPS_SCRIPT_URL</code> dentro de este archivo HTML. Tus datos siguen guardados localmente y puedes exportarlos en <strong>Excel (CSV)</strong> o <strong>Imprimir / PDF</strong>.'
+          : "Error de conexión al enviar a la nube. Tus datos siguen seguros en este dispositivo; puedes descargar respaldo JSON o PDF.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Guardar en Drive / Sheets";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+
+    function syncMetaToInputs() {
+      document.querySelectorAll(".meta-field").forEach(el => {
+        const key = el.getAttribute("data-meta");
+        if (state.meta[key] !== undefined) el.value = state.meta[key];
+      });
+      document.getElementById("generalNotes").value = state.generalNotes || "";
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    loadLocal();
+    document.getElementById("activeMonthSelect").value = new Date().getMonth();
+    syncMetaToInputs();
+
+    document.querySelectorAll(".meta-field").forEach(el => {
+      el.addEventListener("input", () => {
+        state.meta[el.getAttribute("data-meta")] = el.value;
+        saveLocal();
+      });
+    });
+
+    document.getElementById("generalNotes").addEventListener("input", (e) => {
+      state.generalNotes = e.target.value;
+      saveLocal();
+    });
+
+    document.getElementById("searchInput").addEventListener("input", renderBlocks);
+    document.getElementById("statusFilter").addEventListener("change", renderBlocks);
+
+    renderBlocks();
+    renderParts();
+    initSignaturePad("techPad");
+    initSignaturePad("clientPad");
+  </script>
+</body>
+</html>
